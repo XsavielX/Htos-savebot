@@ -1,0 +1,14 @@
+py-cord
+python-dotenv
+aiosqlite
+pycryptodome
+aiofiles
+pillow
+aioftp
+aiogoogle
+psnawp
+crc32c
+numpy
+zstandard
+lz4
+python-dateutil
