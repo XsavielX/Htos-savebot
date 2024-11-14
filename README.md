@@ -1,3 +1,6 @@
+# Costume changes made By Saviel
+
+
 # HTOS
 A discord bot with tons of functionalities that can handle PS4 saves using a jailbroken PS4.
 
@@ -26,41 +29,6 @@ A discord bot with tons of functionalities that can handle PS4 saves using a jai
 - Account ID database, do not include playstation_id parameter if you want to use previously stored account ID
 - Interactive user interface
 
-| Second layer encryption game list        | PS4 -> PC conversion and vice versa | Quick cheats             | Extra re-region support (more than keystone & title id swapping) |
-| ---------------------------------------- | ----------------------------------- | ------------------------ | ---------------------------------------------------------------- |
-| Grand Theft Auto V                       | Grand Theft Auto V                  | Grand Theft Auto V       | Xenoverse 2                                                      |
-| Red Dead Redemption 2                    | Red Dead Redemption 2               | Red Dead Redemption 2    | Metal Gear Solid V: The Phantom Pain                             |
-| Borderlands 3                            | Borderlands 3                       |                          | Metal Gear Solid V: Ground Zeroes                                |
-| Tiny Tina's Wonderlands                  | Tiny Tina's Wonderlands             |
-| Xenoverse 2                              | 
-| The Last of Us                           |
-| The Last of Us Part II                   |
-| Uncharted 4                              |
-| Uncharted: The Lost Legacy               | 
-| Uncharted: The Nathan Drake Collection   |
-| Metal Gear Solid V: The Phantom Pain     | 
-| Metal Gear Solid V: Ground Zeroes        | 
-| Resident Evil Revelations 2              |
-| Dying Light 1 (compression only)         |
-| Dying Light 2 (compression only)         |
-| Like a Dragon: Ishin                     |
-| Dead Island 1 (compression only)         |
-| Dead Island 2 (compression only)         |
-| No Man's Sky (savedata.hg)               |
-| Terraria (.plr & some .wld)              |
-| Shin Megami Tensei 5                     |
-
-If you wanna contribute to this list, please let me know!
-
-## Requirements
-- A jailbroken PS4 running atleast GoldHEN v2.4b14 payload
-- Give the bot permsisions to manage threads and delete messages in addition to the message content intents.
-
-## Tutorial
-Make sure to read everything.
-
-### NPSSO
-For the bot to completely function you need to input your NPSSO 64 character token. This is so you can be authorized to use the PSN API to obtain account ID from username.
 
 How to obtain NPPSO:
 
@@ -100,10 +68,11 @@ How to obtain NPPSO:
 
 ### No jailbroken PS4?
 - Join my discord where the bot is hosted, free to use and often hosted
-  https://discord.gg/fHfmjaCXtb
+  https://discord.gg/ZDuYG8QEQj
 
 ## Credits
 - https://github.com/Team-Alua/cecie.nim for creating the homebrew app that makes this possible, in addition to helping me
+- https://github.com/hzhreal for the code 
 - https://github.com/dylanbbk & https://github.com/iCrazeiOS for help
 - https://github.com/bucanero/save-decrypters for the extra encryption methods
 - https://github.com/bucanero/pfd_sfo_tools/blob/master/sfopatcher/src/sfo.c for the param.sfo parser
