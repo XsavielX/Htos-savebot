@@ -68,18 +68,16 @@ class threadButton(discord.ui.View):
             thread = await interaction.channel.create_thread(name=interaction.user.name, auto_archive_duration=10080)
             await thread.send(interaction.user.mention)
             
-            # Hier wird das threadwelcome Embed hinzugefügt
+           
             threadwelcome = discord.Embed(
                 title="Welcome to Saviel's bot",
-                description=("**This is a bot made specifically for Ps4 modding!**\n\n"
-                             "☆ Cmd `/Resign`\n↳ Resigns the submitted save to your account\n\n"
-                             "☆ Cmd `/Reregion`\n↳ Changes the Region of the save provided to a new one of choice\n\n"
-                             "☆ Cmd `/Decrypt`\n↳ Decrypts the provided save\n\n"
-                             "☆ Cmd `/Encrypt`\n↳ Encrypts the provided save\n\n"
-                             "☆ Cmd `/Quick Codes`\n↳ Applies custom quick codes to the specified save\n\n"
-                             "☆ Cmd `/Quick Resign`\n↳ Resigns Pre-made saves to your account\n\n"
-                             "☆ Cmd `/Convert` (Limited)\n↳ Converts the provided save from Ps4 to PC or PC to Ps4\n\n"
-                             "♡ Many more commands for you to explore!"),
+                description=("**Easily manage your PS4 game saves with this bot!**\n\n"
+                             "📂 **Seamless Save Editing**\n"
+                             "Effortlessly adjust game saves for new accounts or regions.\n\n"
+                             "🔧 **Guided Assistance**\n"
+                             "Need support? Use `/help` for detailed instructions.\n\n"
+                             "🎮 **Reminder:** Always use your PlayStation username as the PSN ID for smooth operation.\n\n"
+                             "Get started now and enjoy your personalized gaming experience! 🚀"),
                 colour=0x0083ff
             )
             threadwelcome.set_thumbnail(url="https://cdn.discordapp.com/attachments/1256434247120584737/1297344797086060574/standard.gif?ex=671595ff&is=6714447f&hm=98be2d6eb93d0c40b68e072b0f8da8b4bfe3d6c3c3991fde38f9960f5c45f44b&")
