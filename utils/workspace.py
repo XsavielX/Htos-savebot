@@ -333,24 +333,28 @@ def semver_to_num(ver: str | int) -> int:
     return ver
 
 async def check_version() -> None:
-    VERSION = "v2.0.2"
-    latest_ver = "v2.0.2"
-    
+    from utils.constants import VERSION
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.github.com/repos/XsavielX/Htos-savebot/releases/latest") as resp:
+            content = await resp.json()
+            latest_ver = content.get("tag_name", 0)
+
     latest_ver_num = semver_to_num(latest_ver)
     cur_ver_num = semver_to_num(VERSION)
     
     if cur_ver_num < latest_ver_num:
-        print("Attention: You are running an outdated version of Saviel`s HTOS Bot. Please update to the latest version to ensure security, performance, and access to new features.")
+        print("Attention: You are running an outdated version of HTOS. Please update to the latest version to ensure security, performance, and access to new features.")
         print(f"Your version: {VERSION}")
         print(f"Latest version: {latest_ver}")
         print("\n")
     elif cur_ver_num > latest_ver_num:
-        print("Attention: You are running a version of Saviel`s HTOS Bot that is newer than the expected release. Please report any bugs you may encounter.")
+        print("Attention: You are running a version of HTOS that is newer than the latest release. Please report any bugs you may encounter.")
         print(f"Your version: {VERSION}")
         print(f"Latest version: {latest_ver}")
         print("\n")
     else:
-        print("You are running the latest version of Saviel`s HTOS Bot.")
+        print("You are running the latest version of HTOS.")
         print(f"Your version: {VERSION}")
         print(f"Latest version: {latest_ver}")
         print("\n")

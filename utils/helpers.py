@@ -68,7 +68,7 @@ class threadButton(discord.ui.View):
             thread = await interaction.channel.create_thread(name=interaction.user.name, auto_archive_duration=10080)
             await thread.send(interaction.user.mention)
             
-           
+            # Hier wird das threadwelcome Embed hinzugefügt
             threadwelcome = discord.Embed(
                 title="Welcome to Saviel's bot",
                 description=("**This is a bot made specifically for Ps4 modding!**\n\n"
