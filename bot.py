@@ -59,34 +59,48 @@ async def on_message(message: discord.Message) -> None:
     if message.author.bot:
         return
 
+    # Antwort auf "hello"
     if message.content.lower() == "hello":
-        await message.channel.send("hi")
+        await message.channel.send("Hi 👋")
 
-    if any(trigger in message.content.lower() for trigger in ["help bot", "bot help", "help", "bot"]):
+    # Logik für die Validierung der spezifischen Trigger
+    valid_triggers = [
+        "start bot", "startbot", "start Bot", "startbot Bot", "start bot Bot",
+        "bot start", "bot startbot", "bot start bot", "bot start Bot", "Bot start",
+        "Bot startbot", "Bot start bot", "Bot start Bot", "startbot bot", "startbot Bot",
+        "start bot bot", "start bot Bot", "start Bot bot", "start Bot Bot", "help bot",
+        "help Bot", "bot help", "Bot help", "start help", "startbot help", "help start",
+        "help startbot"
+    ]
+
+    if message.content.lower() in [trigger.lower() for trigger in valid_triggers]:
         await message.channel.send(
             f"""### **Welcome to the PS4 Save Editor Bot**  
 
 To get started with our free service for editing PS4 save games (including saves used on PS5), follow these steps:
 
-1️⃣ **Select Your Role**  
-   Head to the self-role channel and assign yourself the **@Bot Ping** role. This role ensures you’ll be notified whenever the bot is online and ready to assist.
+1️⃣ **Select the Savegame Bot Role**  
+   Go to the self-role channel and assign yourself the **Savegame Bot** role. This role ensures you have access to interact with the bot.
 
 2️⃣ **Open Your Personal Workspace**  
    Navigate to the **ps4-save-bot** channel and start a thread. This thread will be your dedicated space for working with the bot.
 
 3️⃣ **Start Editing Your Saves**  
-   After creating your thread, the bot will send a welcome message with detailed instructions to guide you through the process.
+   Once your thread is created, follow the bot's instructions to modify or resign your PS4 saves.
+
+💡 **Need More Information?**  
+   Use the `/help` command to see a full list of available commands and learn how to use the bot's features.
 
 🛠️ **Need Help?**  
    If you encounter any issues, feel free to ask for assistance in the support channel.
 
-💡 **Pro Tip:** Assigning yourself the **@Bot Ping** role ensures you’ll never miss when the bot is online and ready for use.
-
-Thank you for choosing our PS4 Save Editor Bot! 🚀
+Thank you for choosing my Save Editor Bot! 🚀
 {message.author.mention}"""
         )
 
     await bot.process_commands(message)
+
+  
 
 cogs_list = [
     "change",
