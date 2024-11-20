@@ -15,6 +15,11 @@ async def on_ready() -> None:
     bot.add_view(threadButton())  # make view persistent
     checkGDrive.start()  # start gd daemon
     await bot.sync_commands()  # Synchronisiert alle Slash Commands
+    # Get bot owner name, and declare the variable for use in other functions
+    app_info = await bot.application_info()
+    global bot_owner_name
+    bot_owner_name = app_info.owner.name  # Get the owners username
+
     print(
         f"Bot is ready, invite link: https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot"
     )
@@ -48,7 +53,7 @@ async def helpbot(ctx: discord.ApplicationContext):
             "- Resigning and re-encryption are required for saves to function on new accounts or consoles.\n\n"
             "**Learn More**\n"
             "Watch our detailed video tutorial for step-by-step instructions: **[YouTube Tutorial](https://www.youtube.com/watch?v=cGeVhia0KjA)**\n\n"
-            "If you encounter any issues or need further help, please let me know. **Saviel** 🔥"
+            f"If you encounter any issues or need further help, please let me know. **{bot_owner_name}** 🔥"
         ),
         color=discord.Color.blue()
     )
