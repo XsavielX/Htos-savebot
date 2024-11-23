@@ -13,7 +13,7 @@ from discord.ext import commands
 from enum import Enum
 from psnawp_api import PSNAWP
 
-VERSION = "v2.0.2"
+VERSION = "v2.0.3"
 
 # LOGGER
 def setup_logger() -> logging.Logger:

@@ -543,111 +543,169 @@ def qr_check(message: discord.Message, ctx: discord.ApplicationContext, max_inde
                 return False
     return False
 
-async def qr_interface_main(d_ctx: DiscordContext, stored_saves: dict[str, dict[str, dict[str, str]]]) -> tuple[str, dict[str, dict[str, str]]] | tuple[Literal["EXIT"], Literal["EXIT"]]:
-    game_desc = ""
-    game_msgs = []
-    selection = {}
-    entries_added = 0
-    embmain = discord.Embed(
-        title="All available games",
-        colour=Color.DEFAULT.value
-    )
-    embmain.set_footer(text=QR_FOOTER1)
-    
-    for game, _ in stored_saves.items():
-        game_info = f"\n{entries_added + 1}. {game}"
-        if len(game_desc + game_info) <= EMBED_DESC_LIM:
-            game_desc += game_info
-        else:
-            embmain.description = game_desc
-            msg = await d_ctx.ctx.respond(embed=embmain)
-            game_msgs.append(msg)
-            game_desc = game_info
-        selection[entries_added] = game
-        entries_added += 1
-    if game_desc:
-        embmain.description = game_desc
-        msg = await d_ctx.ctx.respond(embed=embmain)
-        game_msgs.append(msg)
-    
-    if entries_added == 0:
-        raise WorkspaceError("NO STORED SAVES!")
 
-    try:
-       message = await bot.wait_for("message", check=lambda message: qr_check(message, d_ctx.ctx, entries_added, "EXIT"), timeout=OTHER_TIMEOUT) 
-    except asyncio.TimeoutError:
-        await clean_msgs(game_msgs)
-        raise TimeoutError("TIMED OUT!")
-    
-    await message.delete()
-    await clean_msgs(game_msgs)
 
-    if message.content == "EXIT":
-        return message.content, message.content
-    
-    else:
-        game = selection[int(message.content) - 1]
-        selected_game = stored_saves.get(game)
-        if not selected_game:
-            raise WorkspaceError("Could not find game!")
-        return game, selected_game
+import discord
+from discord.ui import View, Button
+from dataclasses import dataclass
+from typing import Literal
+import os
+
+
+@dataclass
+class DiscordContext:
+    ctx: discord.ApplicationContext
+    msg: discord.Message
+
+
+class WorkspaceError(Exception):
+    pass
+
+
+class PaginatorView(View):
+    def __init__(self, items: list[str], title: str, per_page: int = 10):
+        super().__init__(timeout=120)
+        self.items = items
+        self.title = title
+        self.per_page = per_page
+        self.current_page = 0
+        self.selected_item = None
+        self.message = None
+        self.update_buttons()
+
+    def update_buttons(self):
+        self.clear_items()
+
+        prev_button = Button(label="Previous", style=discord.ButtonStyle.primary, row=0)
+        prev_button.disabled = self.current_page == 0
+        prev_button.callback = self.previous_page
+        self.add_item(prev_button)
+
+        next_button = Button(label="Next", style=discord.ButtonStyle.primary, row=0)
+        next_button.disabled = (self.current_page + 1) * self.per_page >= len(self.items)
+        next_button.callback = self.next_page
+        self.add_item(next_button)
+
+        start_index = self.current_page * self.per_page
+        end_index = min(start_index + self.per_page, len(self.items))
+        row = 1
+        for i, item in enumerate(self.items[start_index:end_index], start=1):
+            button = Button(label=f"{start_index + i}", style=discord.ButtonStyle.secondary, row=row)
+            button.callback = self.make_select_callback(item)
+            self.add_item(button)
+
+            if i % 5 == 0:
+                row += 1
+
+        exit_button = Button(label="Exit", style=discord.ButtonStyle.danger, row=3)
+        exit_button.callback = self.exit
+        self.add_item(exit_button)
+
+    def make_select_callback(self, item):
+        async def callback(interaction: discord.Interaction):
+            self.selected_item = item
+            self.stop()
+            await interaction.response.defer()
+        return callback
+
+    async def previous_page(self, interaction: discord.Interaction):
+        self.current_page -= 1
+        self.update_buttons()
+        await interaction.response.edit_message(embed=self.get_embed(), view=self)
+
+    async def next_page(self, interaction: discord.Interaction):
+        self.current_page += 1
+        self.update_buttons()
+        await interaction.response.edit_message(embed=self.get_embed(), view=self)
+
+    async def exit(self, interaction: discord.Interaction):
+        self.selected_item = "EXIT"
+        self.stop()
+        if self.message:
+            try:
+                await self.message.delete()
+            except discord.errors.NotFound:
+                pass
+        await interaction.response.defer()
+
+    def get_embed(self):
+        start_index = self.current_page * self.per_page
+        end_index = min(start_index + self.per_page, len(self.items))
+        description = "\n".join(f"{start_index + i}. {item}" for i, item in enumerate(self.items[start_index:end_index], start=1))
+        embed = discord.Embed(title=self.title, description=description, colour=discord.Colour.blurple())
+        embed.set_footer(text=f"Page {self.current_page + 1} of {(len(self.items) + self.per_page - 1) // self.per_page}")
+        return embed
+
+
+async def qr_interface_main(d_ctx: DiscordContext, stored_saves: dict) -> tuple[str, dict] | tuple[Literal["EXIT"], Literal["EXIT"]]:
+    raise NotImplementedError("This function is deprecated. Please use 'run_qr_paginator' instead.")
+
 
 async def run_qr_paginator(d_ctx: DiscordContext, stored_saves: dict[str, dict[str, dict[str, str]]]) -> str:
+    messages_to_delete = []
+
     while True:
-        game, game_dict = await qr_interface_main(d_ctx, stored_saves)
-        if game == "EXIT" and game_dict == "EXIT":
+        games = list(stored_saves.keys())
+        if not games:
+            raise WorkspaceError("NO STORED SAVES!")
+
+        view = PaginatorView(games, title="Select a Game")
+        embed = view.get_embed()
+        view.message = await d_ctx.ctx.send(embed=embed, view=view)
+        messages_to_delete.append(view.message)
+
+        await view.wait()
+
+        if view.selected_item == "EXIT":
+            for message in messages_to_delete:
+                try:
+                    await message.delete()
+                except discord.errors.NotFound:
+                    pass
             return "EXIT"
 
-        pages_list = []
-        selection = {}
-        entries_added = 0 # no limit
+        selected_game = view.selected_item
+        for message in messages_to_delete:
+            try:
+                await message.delete()
+            except discord.errors.NotFound:
+                pass
 
-        emb = discord.Embed(
-            title=game,
-            colour=Color.DEFAULT.value
-        )
-        emb.set_footer(text=QR_FOOTER2)
-        fields_added = 0 # stays within limit
+        game_data = stored_saves[selected_game]
 
-        for titleId, titleId_dict in game_dict.items():
-            for savedesc, path in titleId_dict.items():
-                if fields_added < EMBED_FIELD_LIM:
-                    emb.add_field(name=titleId, value=f"{entries_added + 1}. {savedesc}")
-                    selection[entries_added] = path
-                    entries_added += 1
-                    fields_added += 1
+        versions = [
+            (os.path.basename(path), path)
+            for titleId_dict in game_data.values()
+            for savedesc, path in titleId_dict.items()
+        ]
 
-                else:
-                    pages_list.append(emb)
-                    emb = emb.copy()
-                    emb.clear_fields()
-                    fields_added = 0
-        pages_list.append(emb)
-        
-        if entries_added == 0:
-            raise WorkspaceError("NO STORED SAVES!")
-        
-        paginator = pages.Paginator(pages=pages_list, show_disabled=False, timeout=None)
-        p_msg = await paginator.respond(d_ctx.ctx.interaction)
-            
+        if not versions:
+            raise WorkspaceError(f"No versions available for the game '{selected_game}'.")
+
+        version_names = [v[0] for v in versions]
+        view = PaginatorView(version_names, title=f"Select a Version for {selected_game}")
+        embed = view.get_embed()
+        view.message = await d_ctx.ctx.send(embed=embed, view=view)
+
+        await view.wait()
+
+        if view.selected_item == "EXIT":
+            try:
+                await view.message.delete()
+            except discord.errors.NotFound:
+                pass
+            return "EXIT"
+
+        selected_version_name = view.selected_item
+        selected_version_path = next(v[1] for v in versions if v[0] == selected_version_name)
+
+        savename = await get_savename_from_bin_ext(selected_version_path)
+        if not savename:
+            raise WorkspaceError("Failed to extract save name!")
+
+        full_path = os.path.join(selected_version_path, savename)
         try:
-            message = await bot.wait_for("message", check=lambda message: qr_check(message, d_ctx.ctx, entries_added, "BACK"), timeout=OTHER_TIMEOUT) 
-        except asyncio.TimeoutError:
-            await paginator.disable(page=pages_list[0])
-            await p_msg.delete()
-            raise TimeoutError("TIMED OUT!")
-        
-        await message.delete()
-
-        await paginator.disable(page=pages_list[0])
-        await p_msg.delete()
-        
-        if message.content == "BACK":
-            continue
-        
-        else:
-            selected_save = selection[int(message.content) - 1]
-            savename = await get_savename_from_bin_ext(selected_save)
-            if not savename:
-                raise WorkspaceError("Failed to get save!")
-            return os.path.join(selected_save, savename)
+            await view.message.delete()
+        except discord.errors.NotFound:
+            pass
+        return full_path
