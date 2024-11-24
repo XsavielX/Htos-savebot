@@ -12,17 +12,15 @@ from typing import Literal
 from discord.ui.item import Item
 from psnawp_api.core.psnawp_exceptions import PSNAWPNotFound
 from google_drive import GDapi, GDapiError
-# from data.crypto.helpers import extra_import
 from network import FTPps
-# from utils.orbis import checkSaves, handle_accid, checkid
 from utils.constants import (
-    logger, Color, Embed_t, bot, psnawp, 
-    NPSSO, UPLOAD_TIMEOUT, FILE_LIMIT_DISCORD, SCE_SYS_CONTENTS, OTHER_TIMEOUT, MAX_FILES, 
+    logger, blacklist_logger, Color, Embed_t, bot, psnawp, 
+    NPSSO, UPLOAD_TIMEOUT, FILE_LIMIT_DISCORD, SCE_SYS_CONTENTS, OTHER_TIMEOUT, MAX_FILES, BLACKLIST_MESSAGE,
     BOT_DISCORD_UPLOAD_LIMIT, MAX_PATH_LEN, MAX_FILENAME_LEN, PSN_USERNAME_RE, MOUNT_LOCATION, RANDOMSTRING_LENGTH, CON_FAIL_MSG, EMBED_DESC_LIM, EMBED_FIELD_LIM, QR_FOOTER1, QR_FOOTER2,
-    embgdt, embUtimeout, embnt, embnv1, emb8, embvalidpsn
+    embgdt, embUtimeout, embnt, emb8, embvalidpsn
 )
 from utils.exceptions import PSNIDError, FileError
-from utils.workspace import fetch_accountid_db, write_accountid_db, cleanup, cleanupSimple, write_threadid_db, WorkspaceError, get_savename_from_bin_ext
+from utils.workspace import fetch_accountid_db, write_accountid_db, cleanup, cleanupSimple, write_threadid_db, WorkspaceError, get_savename_from_bin_ext, blacklist_check_db
 from utils.extras import zipfiles
 
 @dataclass
@@ -31,27 +29,25 @@ class DiscordContext:
     msg: discord.Message
 
 class TimeoutHelper:
-    """Utilities to pause the process for the user to choose an option, used for discord buttons."""
     def __init__(self, embTimeout: discord.Embed) -> None:
         self.done = False
         self.embTimeout = embTimeout
 
     async def await_done(self) -> None:
         try:
-            while not self.done:  # Continue waiting until done is True
-                await asyncio.sleep(1)  # Sleep for 1 second to avoid busy-waiting
+            while not self.done:
+                await asyncio.sleep(1)
         except asyncio.CancelledError:
-            pass  # Handle cancellation if needed
+            pass
     
     async def handle_timeout(self, ctx: discord.ApplicationContext | discord.Message) -> None:
         await asyncio.sleep(2)
         if not self.done:
             await ctx.edit(embed=self.embTimeout, view=None)
-            await asyncio.sleep(4) # make sure user is aware of msg
+            await asyncio.sleep(4)
             self.done = True
 
 class threadButton(discord.ui.View):
-    """The panel that allows the user to create a thread to use the bot."""
     def __init__(self) -> None:
         super().__init__(timeout=None)
 
@@ -68,7 +64,6 @@ class threadButton(discord.ui.View):
             thread = await interaction.channel.create_thread(name=interaction.user.name, auto_archive_duration=10080)
             await thread.send(interaction.user.mention)
             
-           
             threadwelcome = discord.Embed(
                 title="Welcome to Saviel's bot",
                 description=("**Easily manage your PS4 game saves with this bot!**\n\n"
@@ -82,10 +77,8 @@ class threadButton(discord.ui.View):
             )
             threadwelcome.set_thumbnail(url="https://cdn.discordapp.com/attachments/1256434247120584737/1297344797086060574/standard.gif?ex=671595ff&is=6714447f&hm=98be2d6eb93d0c40b68e072b0f8da8b4bfe3d6c3c3991fde38f9960f5c45f44b&")
             threadwelcome.set_footer(text="Start Modding & Have fun!", icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
-
             await thread.send(embed=threadwelcome)
             ids_to_remove = await write_threadid_db(interaction.user.id, thread.id)
-            
         except (WorkspaceError, discord.Forbidden) as e:
             logger.error(f"Can not create thread: {e}")
         
@@ -103,6 +96,7 @@ async def clean_msgs(messages: list[discord.Message]) -> None:
             await msg.delete()
         except discord.Forbidden:
             pass
+
 
 async def errorHandling(
           ctx: discord.ApplicationContext | discord.Message, 
@@ -124,6 +118,16 @@ async def errorHandling(
     else:
         cleanupSimple(workspaceFolders)
 
+"""Makes the bot expect multiple files through discord or google drive."""
+def upl_check(message: discord.Message, ctx: discord.ApplicationContext) -> bool:
+    if message.author == ctx.author and message.channel == ctx.channel:
+        return (len(message.attachments) >= 1) or (message.content and GDapi.is_google_drive_link(message.content)) or (message.content and message.content == "EXIT")
+    
+"""Makes the bot expect a single file through discord or google drive."""
+def upl1_check(message: discord.Message, ctx: discord.ApplicationContext) -> bool:
+    if message.author == ctx.author and message.channel == ctx.channel:
+        return (len(message.attachments) == 1) or (message.content and GDapi.is_google_drive_link(message.content)) or (message.content and message.content == "EXIT")
+
 async def upload2(
           d_ctx: DiscordContext, 
           saveLocation: str, 
@@ -134,13 +138,8 @@ async def upload2(
           savesize: int | None = None
         ) -> list[str]:
 
-    """Makes the bot expect multiple files through discord or google drive."""
-    def check(message: discord.Message, ctx: discord.ApplicationContext) -> bool:
-        if message.author == ctx.author and message.channel == ctx.channel:
-            return len(message.attachments) >= 1 or (message.content and GDapi.is_google_drive_link(message.content))
-
     try:
-        message = await bot.wait_for("message", check=lambda message: check(message, d_ctx.ctx), timeout=UPLOAD_TIMEOUT)  # Wait for 300 seconds for a response with one attachments
+        message: discord.Message = await bot.wait_for("message", check=lambda message: upl_check(message, d_ctx.ctx), timeout=UPLOAD_TIMEOUT)  # Wait for 300 seconds for a response with attachments
     except asyncio.TimeoutError:
         await d_ctx.msg.edit(embed=embUtimeout)
         raise TimeoutError("TIMED OUT!")
@@ -174,6 +173,9 @@ async def upload2(
                 await orbis.parse_sealedkey(file_path)
         
         await message.delete() # delete afterwards for reliability
+
+    elif message.content == "EXIT":
+        raise TimeoutError("EXITED!")
     
     else:
         try:
@@ -189,14 +191,9 @@ async def upload2(
         
     return uploaded_file_paths
 
-async def upload1(d_ctx: DiscordContext, saveLocation: str) -> str:
-    """Makes the bot expect a single file through discord or google drive."""
-    def check(message: discord.Message, ctx: discord.ApplicationContext) -> bool:
-        if message.author == ctx.author and message.channel == ctx.channel:
-            return len(message.attachments) == 1 or (message.content and GDapi.is_google_drive_link(message.content))
-        
+async def upload1(d_ctx: DiscordContext, saveLocation: str) -> str:        
     try:
-        message = await bot.wait_for("message", check=lambda message: check(message, d_ctx.ctx), timeout=UPLOAD_TIMEOUT)  # Wait for 120 seconds for a response with an attachment
+        message: discord.Message = await bot.wait_for("message", check=lambda message: upl1_check(message, d_ctx.ctx), timeout=UPLOAD_TIMEOUT)  # Wait for 120 seconds for a response with an attachment
     except asyncio.TimeoutError:
         await d_ctx.msg.edit(embed=embUtimeout)
         raise TimeoutError("TIMED OUT!")
@@ -226,6 +223,9 @@ async def upload1(d_ctx: DiscordContext, saveLocation: str) -> str:
             await message.delete()
             await d_ctx.msg.edit(embed=emb16)
 
+    elif message.content == "EXIT":
+        raise TimeoutError("EXITED!")
+
     else:
         try:
             google_drive_link = message.content
@@ -244,13 +244,8 @@ async def upload1(d_ctx: DiscordContext, saveLocation: str) -> str:
     return file_path
 
 async def upload2_special(d_ctx: DiscordContext, saveLocation: str, max_files: int, splitvalue: str, savesize: int | None = None) -> list[str]:
-    """Makes the bot expect multiple files through discord or google drive (createsave command)."""
-    def check(message: discord.Message, ctx: discord.ApplicationContext) -> bool:
-        if message.author == ctx.author and message.channel == ctx.channel:
-            return len(message.attachments) >= 1 or (message.content and GDapi.is_google_drive_link(message.content))
-
     try:
-        message = await bot.wait_for("message", check=lambda message: check(message, d_ctx.ctx), timeout=UPLOAD_TIMEOUT)  # Wait for 300 seconds for a response with one attachments
+        message: discord.Message = await bot.wait_for("message", check=lambda message: upl_check(message, d_ctx.ctx), timeout=UPLOAD_TIMEOUT)  # Wait for 300 seconds for a response with one attachments
     except asyncio.TimeoutError:
         await d_ctx.msg.edit(embed=embUtimeout)
         raise TimeoutError("TIMED OUT!")
@@ -294,6 +289,9 @@ async def upload2_special(d_ctx: DiscordContext, saveLocation: str, max_files: i
             uploaded_file_paths.append(full_path)
         
         await message.delete()
+
+    elif message.content == "EXIT":
+        raise TimeoutError("EXITED!")
     
     else:
         try:
@@ -316,6 +314,10 @@ async def psusername(ctx: discord.ApplicationContext, username: str) -> str:
     if username == "":
         user_id = await fetch_accountid_db(ctx.author.id)
         if user_id is not None:
+            # check blacklist while we are at it
+            if await blacklist_check_db(None, user_id):
+                blacklist_logger.info(f"{ctx.author.name} ({ctx.author.id}) used a blacklisted account ID: {user_id}")
+                raise PSNIDError(BLACKLIST_MESSAGE)
             return user_id
         else:
             raise PSNIDError("Could not find previously stored account ID.")
@@ -327,11 +329,9 @@ async def psusername(ctx: discord.ApplicationContext, username: str) -> str:
     limit = 0
 
     if len(username) < 3 or len(username) > 16:
-        await ctx.edit(embed=embnv1)
         await asyncio.sleep(1)
         raise PSNIDError("Invalid PS username!")
     elif not bool(PSN_USERNAME_RE.fullmatch(username)):
-        await ctx.edit(embed=embnv1)
         await asyncio.sleep(1)
         raise PSNIDError("Invalid PS username!")
 
@@ -391,6 +391,12 @@ async def psusername(ctx: discord.ApplicationContext, username: str) -> str:
         await ctx.respond(embed=embvalidpsn)
 
     await asyncio.sleep(0.5)
+
+    # check blacklist while we are at it
+    if await blacklist_check_db(None, user_id):
+        blacklist_logger.info(f"{ctx.author.name} ({ctx.author.id}) used a blacklisted account ID: {user_id}")
+        raise PSNIDError(BLACKLIST_MESSAGE)
+
     await write_accountid_db(ctx.author.id, user_id.lower())
     return user_id.lower()
 
@@ -542,8 +548,6 @@ def qr_check(message: discord.Message, ctx: discord.ApplicationContext, max_inde
             except ValueError:
                 return False
     return False
-
-
 
 import discord
 from discord.ui import View, Button

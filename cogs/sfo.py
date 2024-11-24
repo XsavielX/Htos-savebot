@@ -55,7 +55,7 @@ class SFO(commands.Cog):
         await ctx.respond(embed=loadSFO_emb)
 
         if sfo.size / (1024 * 1024) > SYS_FILE_MAX:
-            e = "File size is too large!"
+            e = "⚠️File size is too large!"
             await errorHandling(ctx, e, workspaceFolders, None, None, None)
             return
 

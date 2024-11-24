@@ -73,11 +73,12 @@ class Decrypt(commands.Cog):
                 random_string_mount = generate_random_string(RANDOMSTRING_LENGTH)
 
                 emb11 = discord.Embed(
-                    title="Decrypt process: Initializing",
-                    description=f"Mounting {save}.",
+                    title="🔓 Decrypt Process: Initializing",
+                    description=f"🔄 Mounting **{save}**, please wait...",
                     colour=Color.DEFAULT.value
                 )
-                emb11.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                emb11.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
+
                 
                 try:
                     await aiofiles.os.rename(os.path.join(newUPLOAD_ENCRYPTED, save), os.path.join(newUPLOAD_ENCRYPTED, realSave))
@@ -91,11 +92,11 @@ class Decrypt(commands.Cog):
                     await C1socket.socket_dump(mount_location_new, realSave)
 
                     emb_dl = discord.Embed(
-                        title="Decrypt process: Downloading",
-                        description=f"{save} mounted, downloading decrypted savefile.",
+                        title="🔓 Decrypt Process: Downloading",
+                        description=f"📥 **{save}** mounted, downloading decrypted savefile...",
                         colour=Color.DEFAULT.value
                     ) 
-                    emb_dl.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                    emb_dl.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
                     await msg.edit(embed=emb_dl)
 
                     if include_sce_sys:
@@ -110,11 +111,11 @@ class Decrypt(commands.Cog):
                     destination_directory = destination_directory + f"_{title_id_grab}"
 
                     emb13 = discord.Embed(
-                        title="Decrypt process: Successful",
-                        description=f"Downloaded the decrypted save of **{save}** from **{title_id_grab}**.",
+                        title="🔓 Decrypt Process: Successful",
+                        description=f"✅ Decrypted save **{save}** successfully downloaded from **{title_id_grab}**.",
                         colour=Color.DEFAULT.value
                     )
-                    emb13.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                    emb13.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
                     
                     await extra_decrypt(d_ctx, Crypto, title_id_grab, destination_directory, save)
 
@@ -140,11 +141,11 @@ class Decrypt(commands.Cog):
             else: finishedFiles = ", ".join(savenames)
 
             embDdone = discord.Embed(
-                title="Decryption process: Successful",
-                description=f"**{finishedFiles}** has been decrypted.",
+                title="🔓 Decryption Process: Successful",
+                description=f"✅ The savefile(s) **{finishedFiles}** have been successfully decrypted.",
                 colour=Color.DEFAULT.value
             )
-            embDdone.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+            embDdone.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
             await msg.edit(embed=embDdone)
 
             if len(await aiofiles.os.listdir(newDOWNLOAD_DECRYPTED)) == 1:

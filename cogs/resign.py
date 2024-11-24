@@ -23,25 +23,27 @@ class Resign(commands.Cog):
         self.bot = bot
     
     @discord.slash_command(description="Resign encrypted savefiles (the usable ones you put in the console).")
-    async def resign(self, ctx: discord.ApplicationContext, playstation_id: Option(str, description=PS_ID_DESC, default="")) -> None: # type: ignore
+    async def resign(self, ctx: discord.ApplicationContext, playstation_id: Option(str, description=PS_ID_DESC, default="")) -> None:  # type: ignore
         newUPLOAD_ENCRYPTED, newUPLOAD_DECRYPTED, newDOWNLOAD_ENCRYPTED, newPNG_PATH, newPARAM_PATH, newDOWNLOAD_DECRYPTED, newKEYSTONE_PATH = initWorkspace()
         workspaceFolders = [newUPLOAD_ENCRYPTED, newUPLOAD_DECRYPTED, newDOWNLOAD_ENCRYPTED, 
                             newPNG_PATH, newPARAM_PATH, newDOWNLOAD_DECRYPTED, newKEYSTONE_PATH]
-        try: await makeWorkspace(ctx, workspaceFolders, ctx.channel_id)
-        except WorkspaceError: return
+        try:
+            await makeWorkspace(ctx, workspaceFolders, ctx.channel_id)
+        except WorkspaceError:
+            return
+
         C1ftp = FTPps(IP, PORT_FTP, PS_UPLOADDIR, newDOWNLOAD_DECRYPTED, newUPLOAD_DECRYPTED, newUPLOAD_ENCRYPTED,
-                    newDOWNLOAD_ENCRYPTED, newPARAM_PATH, newKEYSTONE_PATH, newPNG_PATH)
+                      newDOWNLOAD_ENCRYPTED, newPARAM_PATH, newKEYSTONE_PATH, newPNG_PATH)
         C1socket = SocketPS(IP, PORT_CECIE)
         mountPaths = []
-        
         msg = ctx
 
         try:
             user_id = await psusername(ctx, playstation_id)
             await asyncio.sleep(0.5)
             msg = await ctx.edit(embed=embEncrypted1)
-            msg = await ctx.fetch_message(msg.id) # use message id instead of interaction token, this is so our command can last more than 15 min
-            d_ctx = DiscordContext(ctx, msg) # this is for passing into functions that need both
+            msg = await ctx.fetch_message(msg.id)
+            d_ctx = DiscordContext(ctx, msg)
             uploaded_file_paths = await upload2(d_ctx, newUPLOAD_ENCRYPTED, max_files=MAX_FILES, sys_files=False, ps_save_pair_upload=True, ignore_filename_check=False)
         except HTTPError as e:
             err = GDapi.getErrStr_HTTPERROR(e)
@@ -70,11 +72,13 @@ class Resign(commands.Cog):
                     await aiofiles.os.rename(os.path.join(newUPLOAD_ENCRYPTED, save + ".bin"), os.path.join(newUPLOAD_ENCRYPTED, realSave + ".bin"))
 
                     emb4 = discord.Embed(
-                        title="Resigning process: Encrypted",
-                        description=f"Your save (**{save}**) is being resigned, please wait...",
+                        title="🔒 Resigning Process: Encrypted",
+                        description=f"✨ Your save (**{save}**) is being resigned. Please wait a moment...",
                         colour=Color.DEFAULT.value
                     )
-                    emb4.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                    emb4.set_footer(
+                        icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48"
+                    )
                     await msg.edit(embed=emb4)
 
                     await C1ftp.uploadencrypted_bulk(realSave)
@@ -88,16 +92,18 @@ class Resign(commands.Cog):
                     await C1ftp.dlencrypted_bulk(False, user_id, realSave)
 
                     emb5 = discord.Embed(
-                        title="Resigning process (Encrypted): Successful",
-                        description=f"**{save}** resigned to **{playstation_id or user_id}**.",
+                        title="✅ Resigning Process: Success",
+                        description=f"🎉 **{save}** has been successfully resigned to **{playstation_id or user_id}**!",
                         colour=Color.DEFAULT.value
                     )
-                    emb5.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                    emb5.set_footer(
+                        icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48"
+                    )
                     await msg.edit(embed=emb5)
 
                 except (SocketError, FTPError, OrbisError, OSError) as e:
                     status = "expected"
-                    if isinstance(e, OSError) and e.errno in CON_FAIL: 
+                    if isinstance(e, OSError) and e.errno in CON_FAIL:
                         e = CON_FAIL_MSG
                     elif isinstance(e, OSError):
                         e = BASE_ERROR_MSG
@@ -109,19 +115,23 @@ class Resign(commands.Cog):
                     await errorHandling(msg, BASE_ERROR_MSG, workspaceFolders, uploaded_file_paths, mountPaths, C1ftp)
                     logger.exception(f"{e} - {ctx.user.name} - (unexpected)")
                     return
-                
+
             if len(savenames) == 1:
                 finishedFiles = "".join(savenames)
-            else: finishedFiles = ", ".join(savenames)
-            
+            else:
+                finishedFiles = ", ".join(savenames)
+
             embRdone = discord.Embed(
-                title="Resigning process (Encrypted): Successful",
-                description=f"**{finishedFiles}** resigned to **{playstation_id or user_id}**.",
-                colour=Color.DEFAULT.value)
-            embRdone.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                title="🎉 Resigning Process: Complete",
+                description=f"✨**{finishedFiles}** has been resigned successfully to **{playstation_id or user_id}**!",
+                colour=Color.DEFAULT.value
+            )
+            embRdone.set_footer(
+                icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48"
+            )
             await msg.edit(embed=embRdone)
 
-            try: 
+            try:
                 await send_final(d_ctx, "PS4.zip", newDOWNLOAD_ENCRYPTED)
             except GDapiError as e:
                 await errorHandling(msg, e, workspaceFolders, uploaded_file_paths, mountPaths, C1ftp)
@@ -130,10 +140,10 @@ class Resign(commands.Cog):
 
             await asyncio.sleep(1)
             await cleanup(C1ftp, workspaceFolders, uploaded_file_paths, mountPaths)
-                
-        else: 
+
+        else:
             await msg.edit(embed=emb6)
             cleanupSimple(workspaceFolders)
-    
+
 def setup(bot: commands.Bot) -> None:
     bot.add_cog(Resign(bot))

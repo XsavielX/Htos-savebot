@@ -83,11 +83,11 @@ class Encrypt(commands.Cog):
                     await aiofiles.os.rename(pfs_path + ".bin", os.path.join(newUPLOAD_ENCRYPTED, realSave + ".bin"))
 
                     embmo = discord.Embed(
-                        title="Encryption & Resigning process: Initializing",
-                        description=f"Mounting {save}.",
+                        title="🔒 Encryption & Resigning Process: Initializing",
+                        description=f"🔄 Mounting**{save}**, please wait...",
                         colour=Color.DEFAULT.value
                     )
-                    embmo.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                    embmo.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
                     await msg.edit(embed=embmo)
 
                     await C1ftp.uploadencrypted_bulk(realSave)
@@ -111,11 +111,11 @@ class Encrypt(commands.Cog):
                             await aiofiles.os.mkdir(newUPLOAD_DECRYPTED)
                             
                         embSceSys = discord.Embed(
-                            title=f"Upload: sce_sys contents\n{save}",
-                            description="Please attach the sce_sys files you want to upload.",
+                            title=f"📂 Upload: SCE_SYS Contents\n{save}",
+                            description="🔧 Please attach the **sce_sys files** you want to upload.\n❌ Type **'EXIT'** to cancel the command.",
                             colour=Color.DEFAULT.value
                         )
-                        embSceSys.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                        embSceSys.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
 
                         await msg.edit(embed=embSceSys)
                         uploaded_file_paths_sys = await upload2(d_ctx, newUPLOAD_DECRYPTED, max_files=len(SCE_SYS_CONTENTS), sys_files=True, ps_save_pair_upload=False, ignore_filename_check=False, savesize=pfs_header["size"])
@@ -133,11 +133,11 @@ class Encrypt(commands.Cog):
                     full_completed.append(completed)
 
                     embmidComplete = discord.Embed(
-                        title="Encrypting & Resigning Process: Successful",
-                        description=f"Resigned **{completed}** with title id **{title_id}** to **{playstation_id or user_id}**.",
+                        title="🔒 Encrypting & Resigning Process: Successful",
+                        description=f"✅ Resigned **{completed}** with Title ID **{title_id}** to **{playstation_id or user_id}**.",
                         colour=Color.DEFAULT.value
                     )
-                    embmidComplete.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                    embmidComplete.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
 
                     await msg.edit(embed=embmidComplete)
                 except HTTPError as e:
@@ -166,11 +166,12 @@ class Encrypt(commands.Cog):
             else: full_completed = ", ".join(full_completed)
 
             embComplete = discord.Embed(
-                title="Encrypting & Resigning Process: Successful: Successful",
-                description=f"Resigned **{full_completed}** to **{playstation_id or user_id}**.",
+                title="🔒 Encrypting & Resigning Process: Successful",
+                description=f"✅ Resigned **{full_completed}** to **{playstation_id or user_id}**.",
                 colour=Color.DEFAULT.value
             )
-            embComplete.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+            embComplete.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
+
 
             await msg.edit(embed=embComplete)
 

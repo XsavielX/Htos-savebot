@@ -28,9 +28,9 @@ savesize_presets = [
     OptionChoice("75 MB", (75 * 1024**2) >> 15),
     OptionChoice("100 MB", (100 * 1024**2) >> 15),
 ]
-saveblocks_desc = f"Max is {SAVEBLOCKS_MAX}, the value you put in will deterine savesize (blocks * {SAVEBLOCKS_MAX})."
+saveblocks_desc = f"Max is {SAVEBLOCKS_MAX}, the value you put in will determine savesize (blocks * {SAVEBLOCKS_MAX})."
 saveblocks_annotation = Option(int, description="Size of the save.", choices=savesize_presets) # preset (100 MB max)
-saveblocks_annotation = Option(int, description=saveblocks_desc, min_value=1, max_value=SAVEBLOCKS_MAX) # no preset (1 GB max)
+saveblocks_annotation = Option(int, description=saveblocks_desc, min_value=96, max_value=SAVEBLOCKS_MAX) # no preset (1 GB max)
 
 class CreateSave(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -60,20 +60,20 @@ class CreateSave(commands.Cog):
         await aiofiles.os.makedirs(scesys_local)
         
         embSceSys = discord.Embed(
-            title=f"Upload: sce_sys contents\n{savename}",
-            description="Please attach the sce_sys files you want to upload.",
+            title=f"📤 Upload: sce_sys Contents\n{savename}",
+            description="📂 Please attach the **sce_sys files** you want to upload.",
             colour=Color.DEFAULT.value
         )
         embSceSys.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
 
         embgs = discord.Embed(
-            title=f"Upload: Gamesaves\n{savename}",
+            title=f"🎮Upload: Gamesaves\n{savename}",
             description=(
-                "Please attach the gamesaves files you want to upload.\n"
-                "**FOLLOW THESE INSTRUCTIONS CAREFULLY**\n\n"
-                f"For **discord uploads** rename the files according to the path they are going to have inside the savefile using the value '{DISC_UPL_SPLITVALUE}'. For example the file 'savedata' inside the data directory would be called 'data{DISC_UPL_SPLITVALUE}savedata'.\n\n"
-                "For **google drive uploads** just create the directories on the drive and send the folder link from root, it will be recursively downloaded."
-            ),
+        "📂 Please attach the **game save files** you want to upload.\n"
+        "⚠️ **FOLLOW THESE INSTRUCTIONS CAREFULLY** ⚠️\n\n"
+        f"🔹 For **Discord uploads**:\nRename the files according to the path they are going to have inside the savefile using the value **'{DISC_UPL_SPLITVALUE}'**.\n"
+        "For example, the file 'savedata' inside the data directory would be called 'data{DISC_UPL_SPLITVALUE}savedata'.\n\n"
+        "🔹 For **Google Drive uploads**:\nJust create the directories on the drive and send the folder link from root. It will be **recursively downloaded**."),
             colour=Color.DEFAULT.value
         )
         embgs.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -86,7 +86,7 @@ class CreateSave(commands.Cog):
 
             # value checks
             if not validate_savedirname(savename):
-                raise OrbisError("Invalid savename!")
+                raise OrbisError("⚠️Invalid savename!")
 
             # length checks
             filename_bin = f"{savename}.bin_{'X' * RANDOMSTRING_LENGTH}"
@@ -105,9 +105,9 @@ class CreateSave(commands.Cog):
             # handle sce_sys first
             uploaded_file_paths_sys = await upload2(d_ctx, scesys_local, max_files=len(SCE_SYS_CONTENTS), sys_files=True, ps_save_pair_upload=False, ignore_filename_check=False)
             if len(uploaded_file_paths_sys) == 0:
-                raise FileError("No valid sce_sys files uploaded!")
+                raise FileError("⚠️No valid sce_sys files uploaded!")
             elif len(uploaded_file_paths_sys) < len(MANDATORY_SCE_SYS_CONTENTS):
-                raise FileError("Not enough sce_sys files uploaded!")
+                raise FileError("⚠️Not enough sce_sys files uploaded!")
 
             mandatory_sys_found = 0
             for sys_file in uploaded_file_paths_sys:
@@ -119,13 +119,17 @@ class CreateSave(commands.Cog):
                     mandatory_sys_found += 1
             if mandatory_sys_found != len(MANDATORY_SCE_SYS_CONTENTS):
                 # we are trying to have a valid save
-                raise FileError("All mandatory sce_sys files are not uploaded! We are trying to create a valid save here.")
+                raise FileError(
+        "🚫 Missing mandatory `sce_sys` files!\n"
+        "All required `sce_sys` files must be uploaded to create a valid save.\n"
+        "💡 Ensure that the following files are included:\n"
+        f"🔹 {', '.join(MANDATORY_SCE_SYS_CONTENTS)}")
 
             # next, other files (gamesaves)
             await msg.edit(embed=embgs)
             uploaded_file_paths_special = await upload2_special(d_ctx, newUPLOAD_DECRYPTED, MAX_FILES, DISC_UPL_SPLITVALUE, savesize)
             if len(uploaded_file_paths_special) == 0:
-                raise FileError("No gamesaves uploaded!")
+                raise FileError("⚠️No gamesaves uploaded!")
         except HTTPError as e:
             err = GDapi.getErrStr_HTTPERROR(e)
             await errorHandling(msg, err, workspaceFolders, None, None, None)
@@ -149,8 +153,8 @@ class CreateSave(commands.Cog):
             if len(uploaded_file_paths_special) <= CREATESAVE_ENC_CHECK_LIMIT: # dont want to create unnecessary overhead
                 for gamesave in uploaded_file_paths_special:
                     embsl = discord.Embed(
-                        title=f"Gamesaves: Second layer\n{gamesave}",
-                        description="Checking for supported second layer encryption/compression...",
+                        title=f"🔍 Gamesaves: Second Layer\n🎮 {gamesave}",
+                        description="🛠️ Checking for supported second layer encryption or compression...",
                         colour=Color.DEFAULT.value
                     )
                     embsl.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -159,8 +163,8 @@ class CreateSave(commands.Cog):
                     await extra_import(Crypto, title_id, gamesave)
 
             embc = discord.Embed(
-                title="Processing",
-                description=f"Creating {savename}...",
+                title="⚙️ Processing Save File",
+                description=f"🛠️ Creating save file: **{savename}**...\nPlease wait while we process your request.",
                 colour=Color.DEFAULT.value
             )
             embc.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -216,11 +220,10 @@ class CreateSave(commands.Cog):
         
         embRdone = discord.Embed(
             title="Creation process: Successful",
-            description=f"**{savename}** created & resigned to **{playstation_id or user_id}**.",
+            description=f"✅ Save file **{savename}** has been successfully created and resigned to **{playstation_id or user_id}**.",
             colour=Color.DEFAULT.value
         )
-        embRdone.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
-        
+        embRdone.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
         await msg.edit(embed=embRdone)
 
         try: 

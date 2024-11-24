@@ -32,11 +32,11 @@ class Misc(commands.Cog):
             fw = keyset_to_fw(keyset)
 
             keyset_emb = discord.Embed(
-                title="Success",
+                title="✅Success",
                 description=f"Keyset: {keyset}\nFW: {fw}",
                 color=Color.DEFAULT.value
             )
-            keyset_emb.set_footer(text=Embed_t.DEFAULT_FOOTER.value)   
+            keyset_emb.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")   
             await ctx.edit(embed=keyset_emb)
 
         except (SocketError, OSError) as e:
@@ -91,7 +91,7 @@ class Misc(commands.Cog):
         )
 
         embResult = discord.Embed(title=desc, colour=color)
-        embResult.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+        embResult.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
         await ctx.respond(embed=embResult)
     
     @discord.slash_command(description="Send the panel to create threads.")

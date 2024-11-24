@@ -2,73 +2,112 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import discord
-from discord.ext import commands
 from utils.constants import bot, TOKEN
 from utils.workspace import startup, check_version
 from utils.helpers import threadButton
+import asyncio
+
+bot_owner_name = None
+
+async def fetch_bot_owner():
+    global bot_owner_name
+    app_info = await bot.application_info()
+    bot_owner_name = f"👑 **Bot Owner:** **{app_info.owner.name}**"
 
 @bot.event
 async def on_ready() -> None:
+    global bot_owner_name
     from google_drive import checkGDrive
+
+    if bot_owner_name is None:
+        await fetch_bot_owner()
     startup()
     await check_version()
-    bot.add_view(threadButton())  # make view persistent
-    checkGDrive.start()  # start gd daemon
-    await bot.sync_commands()  # Synchronisiert alle Slash Commands
-    # Get bot owner name, and declare the variable for use in other functions
-    app_info = await bot.application_info()
-    global bot_owner_name
-    bot_owner_name = app_info.owner.name  # Get the owners username
+    bot.add_view(threadButton())
+    checkGDrive.start()
 
     print(
         f"Bot is ready, invite link: https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot"
     )
-
-@bot.slash_command(name="help", description="Learn how to use the PS4 Save Editor Bot.")
-async def helpbot(ctx: discord.ApplicationContext):
-    embed = discord.Embed(
-        title="PS4 Save Editor Bot - Tutorial",
-        description=(
-            "Welcome to the PS4 Save Editor Bot! This bot is designed to assist you in modifying and managing your PS4 save games, "
-            "whether you're looking to resign, decrypt, or customize your saves.\n\n"
-            "### **How to Use**\n"
-            "Use the following commands to interact with your PS4 save files. For best results, ensure your saves are compatible.\n\n"
-            "**Core Commands:**\n"
-            "🔧 **/resign** - Resign your PS4 save file to a new PlayStation account.\n"
-            "🌍 **/reregion** - Change the region of a save to match your game version.\n"
-            "🔓 **/decrypt** - Decrypt your save file for editing.\n"
-            "🔒 **/encrypt** - Re-encrypt your save file after making changes.\n"
-            "🖼️ **/change picture** - Customize the icon/picture associated with your save.\n"
-            "📝 **/change title** - Modify the title of your save file for better organization.\n\n"
-            "**Quick and Advanced Tools:**\n"
-            "⚡ **/quick cheats** - Add pre-made cheat codes to your save for specific games.\n"
-            "🎮 **/quick codes** - Apply quick save modifications with preloaded codes.\n"
-            "📁 **/quick resign** - Quickly resign pre-stored save files.\n"
-            "🔑 **/sealed_key decrypt** - Decrypt sealed keys in `.bin` files.\n"
-            "🧩 **/convert** - Convert PS4 save files to PC or other supported platforms.\n"
-            "📜 **/sfo read** - Extract information from a `param.sfo` file.\n"
-            "🖋️ **/sfo write** - Edit and rewrite parameters in a `param.sfo` file.\n\n"
-            "**Important Notes:**\n"
-            "- Ensure that your saves are properly backed up before making modifications.\n"
-            "- Resigning and re-encryption are required for saves to function on new accounts or consoles.\n\n"
-            "**Learn More**\n"
-            "Watch our detailed video tutorial for step-by-step instructions: **[YouTube Tutorial](https://www.youtube.com/watch?v=cGeVhia0KjA)**\n\n"
-            f"If you encounter any issues or need further help, please let me know. **{bot_owner_name}** 🔥"
-        ),
-        color=discord.Color.blue()
-    )
-    await ctx.respond(embed=embed)
 
 @bot.event
 async def on_message(message: discord.Message) -> None:
     if message.author.bot:
         return
 
-    # Antwort auf "hello"
     if message.content.lower() == "hello":
         await message.channel.send("Hi 👋")
 
-    # Logik für die Validierung der spezifischen Trigger
+    if bot.user.mention in message.content.lower():
+        if "hi" in message.content.lower() or "hello" in message.content.lower():
+            await message.channel.send("Hi 👋")
+        elif "whats up" in message.content.lower() or "whatup" in message.content.lower():
+            await message.channel.send("Hey! What's up? 😊")
+        elif "what's up?" in message.content.lower() or "what's up?" in message.content.lower():
+            await message.channel.send("Hey! What's up? 😊")
+        elif "wie gehts" in message.content.lower() or "how are you" in message.content.lower():
+            await message.channel.send("I'm doing great, thanks for asking! 😄")
+        elif "good morning" in message.content.lower():
+            await message.channel.send("Good morning! 🌅 Hope you have a great day!")
+        elif "good night" in message.content.lower():
+            await message.channel.send("Good night! Sleep well 🌙")
+        elif "howdy" in message.content.lower():
+            await message.channel.send("Howdy! 🤠 How can I assist you?")
+        elif "yo" in message.content.lower():
+            await message.channel.send("Yo! What's up? 😎")
+        elif "whats going on" in message.content.lower():
+            await message.channel.send("Not much, just here to help! 😄")
+        elif "how's everything" in message.content.lower():
+            await message.channel.send("Everything's going great! Thanks for asking! 😊")
+        elif "how are you doing" in message.content.lower():
+            await message.channel.send("I'm doing awesome, thanks for checking in! 😎")
+        elif "guten morgen" in message.content.lower():
+            await message.channel.send("Guten Morgen! 🌞 Ich hoffe, du hast einen tollen Tag!")
+        elif "gute nacht" in message.content.lower():
+            await message.channel.send("Gute Nacht! Schlaf gut 🌙")
+        elif "wie geht's" in message.content.lower():
+            await message.channel.send("Mir geht es gut, danke der Nachfrage! 😄")
+        elif "was geht" in message.content.lower():
+            await message.channel.send("Nicht viel, aber immer bereit zu helfen! 😎")
+        elif "hallo" in message.content.lower():
+            await message.channel.send("Hallo! Wie kann ich helfen? 👋")
+        elif "hi bot" in message.content.lower():
+            await message.channel.send("Hi! How can I assist you today? 👋")
+        elif "servus" in message.content.lower():
+            await message.channel.send("Servus! Wie kann ich behilflich sein? 😊")
+        elif "hey" in message.content.lower():
+            await message.channel.send("Hey! What's going on? 😎")
+        elif "moin" in message.content.lower():
+            await message.channel.send("Moin! Wie kann ich helfen? 😄")
+        elif "hey there" in message.content.lower():
+            await message.channel.send("Hey there! 👋")
+        elif "what's up bot" in message.content.lower():
+            await message.channel.send("Not much, just here to assist you! 😄")
+        elif "hallo bot" in message.content.lower():
+            await message.channel.send("Hallo! Wie kann ich dir helfen? 😊")
+        elif "how's it going" in message.content.lower():
+            await message.channel.send("It's going great! Thanks for asking! 😄")
+        elif "whats the news" in message.content.lower():
+            await message.channel.send("No news yet, but I'm ready to help! 📰")
+        elif "wie läufts" in message.content.lower():
+            await message.channel.send("Alles läuft super! Danke der Nachfrage! 😊")
+        elif "yo bot" in message.content.lower():
+            await message.channel.send("Yo! How can I help today? 😎")
+        elif "hello bot" in message.content.lower():
+            await message.channel.send("Hello! What can I do for you today? 👋")
+        elif "guten tag" in message.content.lower():
+            await message.channel.send("Guten Tag! Wie kann ich behilflich sein? 😄")
+        elif "alles klar" in message.content.lower():
+            await message.channel.send("Alles klar, danke! Wie kann ich dir helfen? 😎")
+        elif "how's everything going" in message.content.lower():
+            await message.channel.send("Everything's going well! How can I assist you? 😄")
+        elif "everything okay" in message.content.lower():
+            await message.channel.send("Everything's great! How can I help you today? 😊")
+        elif "is everything good" in message.content.lower():
+            await message.channel.send("Yes, everything's fine! How can I assist you today? 😄")
+        elif "hey bot" in message.content.lower():
+            await message.channel.send("Hey! Ready to help, as always! 😊")
+
     valid_triggers = [
         "start bot", "startbot", "start Bot", "startbot Bot", "start bot Bot",
         "bot start", "bot startbot", "bot start bot", "bot start Bot", "Bot start",
@@ -99,13 +138,15 @@ To get started with our free service for editing PS4 save games (including saves
 🛠️ **Need Help?**  
    If you encounter any issues, feel free to ask for assistance in the support channel.
 
-Thank you for choosing my Save Editor Bot! 🚀
+{bot_owner_name or "👑 **Bot Owner:** **Unknown Owner**"}  
 {message.author.mention}"""
         )
 
     await bot.process_commands(message)
 
-  
+async def main():
+    async with bot:
+        await bot.start(TOKEN)
 
 cogs_list = [
     "change",
@@ -113,12 +154,14 @@ cogs_list = [
     "createsave",
     "decrypt",
     "encrypt",
+    "extra",
     "misc",
     "quick",
     "reregion",
     "resign",
     "sealed_key",
     "sfo",
+    "help",
 ]
 
 if __name__ == "__main__":
@@ -128,4 +171,4 @@ if __name__ == "__main__":
         print(f"Loaded cog: {cog}.")
     
     print("Starting bot...\n\n")
-    bot.run(TOKEN)
+    asyncio.run(main())

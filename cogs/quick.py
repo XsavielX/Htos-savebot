@@ -93,8 +93,8 @@ class Quick(commands.Cog):
             await C1ftp.dlencrypted_bulk(False, user_id, realSave)
 
             emb5 = discord.Embed(
-                title="Resigning process (Encrypted): Successful",
-                description=f"**{saveName}** resigned to **{playstation_id or user_id}**",
+                title="✅Resigning process (Encrypted): Successful",
+                description=f"🎉**{saveName}** resigned to **{playstation_id or user_id}**",
                 colour=Color.DEFAULT.value
             )
             emb5.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -120,8 +120,8 @@ class Quick(commands.Cog):
             return
         
         embRdone = discord.Embed(
-            title="Resigning process (Encrypted): Successful",
-            description=f"**{saveName}** resigned to **{playstation_id or user_id}**.",
+            title="✅Resigning process (Encrypted): Completed",
+            description=f"🎉**{saveName}** resigned to **{playstation_id or user_id}**.",
             colour=Color.DEFAULT.value
         )
         embRdone.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -181,15 +181,15 @@ class Quick(commands.Cog):
                 savegame = os.path.join(newUPLOAD_DECRYPTED, savefile)
                 
                 embLoading = discord.Embed(
-                    title="Loading",
-                    description=f"Loading {savefile}...",
+                    title="🔄Loading Savefile",
+                    description=f"⏳Preparing {savefile}...",
                     colour=Color.DEFAULT.value
                 )
                 embLoading.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
 
                 embApplied = discord.Embed(
-                    title="Success!",
-                    description=f"Quick codes applied to {savefile}.",
+                    title="🌟 Success!",
+                    description=f"✨ Quick codes have been applied to {savefile}.",
                     colour=Color.DEFAULT.value
                 )
                 embApplied.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -217,8 +217,8 @@ class Quick(commands.Cog):
         else: finishedFiles = ", ".join(completed)
 
         embCompleted = discord.Embed(
-            title="Success!",
-            description=f"Quick codes applied to {finishedFiles}.",
+            title="🏁 Task Completed!",
+            description=f"🚀 Quick codes have been successfully applied to **{finishedFiles}**.\n🔧 Your save files are now updated and ready to go!",
             colour=Color.DEFAULT.value
         )
         embCompleted.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -243,8 +243,8 @@ class Quick(commands.Cog):
         except WorkspaceError: return
 
         embLoading = discord.Embed(
-            title="Loading",
-            description=f"Loading cheats process for {game}...",
+            title="⏳ Loading...",
+            ddescription=f"🔄 Preparing cheats process for **{game}**.\nPlease wait while we load everything!",
             colour=Color.DEFAULT.value
         )
         embLoading.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -252,7 +252,7 @@ class Quick(commands.Cog):
         await ctx.respond(embed=embLoading)
 
         if savefile.size / (1024 * 1024) > BOT_DISCORD_UPLOAD_LIMIT:
-            e = "File size is too large!" # may change in the future when a game with larger savefile sizes are implemented
+            e = "🚫 **File Size Too Large!**" # may change in the future when a game with larger savefile sizes are implemented
             await errorHandling(ctx, e, workspaceFolders, None, None, None)
             return
 

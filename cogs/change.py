@@ -1,3 +1,4 @@
+import aiofiles.ospath
 import discord
 import asyncio
 import aiofiles.os
@@ -30,7 +31,7 @@ class Change(commands.Cog):
               self, 
               ctx: discord.ApplicationContext, 
               picture: discord.Attachment, 
-              playstation_id: Option(str, description=PS_ID_DESC, defualt="") # type: ignore
+              playstation_id: Option(str, description=PS_ID_DESC, default="") # type: ignore
             ) -> None:
         
         newUPLOAD_ENCRYPTED, newUPLOAD_DECRYPTED, newDOWNLOAD_ENCRYPTED, newPNG_PATH, newPARAM_PATH, newDOWNLOAD_DECRYPTED, newKEYSTONE_PATH = initWorkspace()
@@ -53,6 +54,13 @@ class Change(commands.Cog):
             msg = await ctx.fetch_message(msg.id) # use message id instead of interaction token, this is so our command can last more than 15 min
             d_ctx = DiscordContext(ctx, msg) # this is for passing into functions that need both
             uploaded_file_paths = await upload2(d_ctx, newUPLOAD_ENCRYPTED, max_files=MAX_FILES, sys_files=False, ps_save_pair_upload=True, ignore_filename_check=False)
+
+            # png handling
+            await picture.save(pngfile)
+            pngprocess(pngfile, ICON0_FORMAT)
+            png_size = await aiofiles.ospath.getsize(pngfile)
+            if png_size > ICON0_MAXSIZE:
+                raise FileError(f"🚫 The image size is too large!: {png_size}/{ICON0_MAXSIZE}!")
         except HTTPError as e:
             err = GDapi.getErrStr_HTTPERROR(e)
             await errorHandling(msg, err, workspaceFolders, None, None, None)
@@ -70,12 +78,6 @@ class Change(commands.Cog):
         savenames = await obtain_savenames(newUPLOAD_ENCRYPTED)
 
         if len(uploaded_file_paths) >= 2:
-            # png handling
-            if picture.size > ICON0_MAXSIZE:
-                raise OrbisError(f"Icon0 exceeded max size of {ICON0_MAXSIZE}.")
-            await picture.save(pngfile)
-            pngprocess(pngfile, ICON0_FORMAT)
-
             random_string = generate_random_string(RANDOMSTRING_LENGTH)
             uploaded_file_paths = enumerateFiles(uploaded_file_paths, random_string)
             for save in savenames:
@@ -98,8 +100,8 @@ class Change(commands.Cog):
                     await C1ftp.dlencrypted_bulk(False, user_id, realSave)
 
                     embpngs = discord.Embed(
-                        title="PNG process: Successful",
-                        description=f"Altered the save png of **{save}**.",
+                        title="🖼️ PNG Process: Successful",
+                        description=f"✨ The save PNG of **{save}** was successfully altered.",
                         colour=Color.DEFAULT.value
                     )
                     embpngs.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -126,8 +128,8 @@ class Change(commands.Cog):
             else: finishedFiles = ", ".join(savenames)
 
             embPdone = discord.Embed(
-                title="PNG process: Successful",
-                description=f"Altered the save png of **{finishedFiles}** and resigned to '*{playstation_id or user_id}**.",
+                title="🖼️ PNG Process: Successful",
+                description=f"✨ The save PNG of **{finishedFiles}** was successfully altered and resigned to **{playstation_id or user_id}**.",
                 colour=Color.DEFAULT.value
             )
             embPdone.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -203,8 +205,8 @@ class Change(commands.Cog):
                 random_string_mount = generate_random_string(RANDOMSTRING_LENGTH)
 
                 embTitleChange1 = discord.Embed(
-                    title="Change title: Processing",
-                    description=f"Processing {save}.",
+                    title="🔄 Change Title: Processing",
+                    description=f"⏳ Processing **{save}**. Please wait...",
                     colour=Color.DEFAULT.value
                 )
                 embTitleChange1.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -226,8 +228,8 @@ class Change(commands.Cog):
                     await C1ftp.dlencrypted_bulk(False, user_id, realSave)
 
                     embTitleSuccess = discord.Embed(
-                        title="Title altering process: Successful",
-                        description=f"Altered the save titles of **{save}**.",
+                        title="🎉 Title Altering Process: Successful",
+                        description=f"✨ Successfully updated save titles of **{save}**.",
                         colour=Color.DEFAULT.value
                     )
                     embTitleSuccess.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -254,8 +256,8 @@ class Change(commands.Cog):
             else: finishedFiles = ", ".join(savenames)
 
             embTdone = discord.Embed(
-                title="Title altering process: Successful",
-                description=f"Altered the save titles of **{finishedFiles}**, and resigned to **{playstation_id or user_id}**.",
+                title="🎉 Title altering process: Successful",
+                description=f"✨Altered the save titles of **{finishedFiles}**, and resigned to **{playstation_id or user_id}**.",
                 colour=Color.DEFAULT.value
             )
             embTdone.set_footer(text=Embed_t.DEFAULT_FOOTER.value)

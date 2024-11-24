@@ -86,11 +86,11 @@ class ReRegion(commands.Cog):
                 target_titleid = await obtainCUSA(newPARAM_PATH)
                 
                 emb23 = discord.Embed(
-                    title="Obtain process: Keystone",
-                    description=f"Keystone from **{target_titleid}** obtained.",
+                    title="🔑Obtain process: Keystone",
+                    description=f"✅ Keystone from **{target_titleid}** has been successfully obtained.",
                     colour=Color.DEFAULT.value
                 )
-                emb23.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                emb23.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
 
                 await msg.edit(embed=emb23)
 
@@ -149,11 +149,11 @@ class ReRegion(commands.Cog):
                     await aiofiles.os.rename(os.path.join(newUPLOAD_ENCRYPTED, save + ".bin"), os.path.join(newUPLOAD_ENCRYPTED, realSave + ".bin")) 
 
                     emb4 = discord.Embed(
-                        title="Resigning process: Encrypted",
-                        description=f"Your save (**{save}**) is being resigned, please wait...",
+                        title="🔒Resigning process: Encrypted",
+                        description=f"✨ Your save file (**{save}**) is currently being resigned. Please hold on...",
                         colour=Color.DEFAULT.value
                     )
-                    emb4.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                    emb4.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
                     await msg.edit(embed=emb4)
 
                     await C1ftp.uploadencrypted_bulk(realSave)
@@ -168,11 +168,11 @@ class ReRegion(commands.Cog):
                     await C1ftp.dlencrypted_bulk(True, user_id, realSave)
 
                     emb5 = discord.Embed(
-                        title="Re-regioning & Resigning process (Encrypted): Successful",
-                        description=f"**{save}** resigned to **{playstation_id or user_id}** (**{target_titleid}**).",
+                        title="🌍🔒 Re-regioning & Resigning Process: Successful",
+                        description=f"✅ **{save}** has been successfully resigned to **{playstation_id or user_id}** (**{target_titleid}**).",
                         colour=Color.DEFAULT.value
                     )
-                    emb5.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+                    emb5.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
                     await msg.edit(embed=emb5)
 
                 except (SocketError, FTPError, OrbisError, OSError) as e:
@@ -195,11 +195,11 @@ class ReRegion(commands.Cog):
             else: finishedFiles = ", ".join(savenames)
 
             embRgdone = discord.Embed(
-                title="Re-region: Successful",
-                description=f"**{finishedFiles}** re-regioned & resigned to **{playstation_id or user_id}** (**{target_titleid}**).",
+                title="🌍✅ Re-region Process: Successful",
+                description=f"**{finishedFiles}** has been successfully re-regioned and resigned to **{playstation_id or user_id}** (**{target_titleid}**).",
                 colour=Color.DEFAULT.value
             )
-            embRgdone.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
+            embRgdone.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
             
             await msg.edit(embed=embRgdone)
 
