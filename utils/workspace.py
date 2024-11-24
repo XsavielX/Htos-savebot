@@ -1,6 +1,5 @@
 import os
 import sqlite3
-import time
 import shutil
 import aiosqlite
 import discord
@@ -9,11 +8,13 @@ import aiofiles.os
 import aiohttp
 from ftplib import FTP, error_perm
 from aioftp.errors import AIOFTPException
+from psnawp_api.core.psnawp_exceptions import PSNAWPNotFound
 from network import FTPps
 from utils.constants import (
-    UPLOAD_DECRYPTED, UPLOAD_ENCRYPTED, DOWNLOAD_DECRYPTED, PNG_PATH, KEYSTONE_PATH, 
+    UPLOAD_DECRYPTED, UPLOAD_ENCRYPTED, DOWNLOAD_DECRYPTED, PNG_PATH, KEYSTONE_PATH, NPSSO,
     DOWNLOAD_ENCRYPTED, PARAM_PATH, STORED_SAVES_FOLDER, IP, PORT_FTP, MOUNT_LOCATION, PS_UPLOADDIR,
-    DATABASENAME_THREADS, DATABASENAME_ACCIDS, RANDOMSTRING_LENGTH, logger, Color, Embed_t
+    DATABASENAME_THREADS, DATABASENAME_ACCIDS, DATABASENAME_BLACKLIST, BLACKLIST_MESSAGE, RANDOMSTRING_LENGTH, logger, blacklist_logger, psnawp,
+    embChannelError, retry_emb, blacklist_emb
 )
 from utils.extras import generate_random_string
 from utils.type_helpers import uint64
@@ -111,6 +112,25 @@ def startup():
         conn.commit()
         cursor.close()
         conn.close()
+
+        #######
+        conn = sqlite3.connect(DATABASENAME_BLACKLIST)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS PS_Users (
+                    account_id BLOB UNIQUE,
+                    username TEXT UNIQUE
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Disc_Users (
+                    user_id BLOB UNIQUE,
+                    username TEXT UNIQUE
+            )
+        """)
+        conn.commit()
+        cursor.close()
+        conn.close()
     except sqlite3.Error as e:
         print(f"Error creating databases: {e}\nExiting...")
         logger.exception(f"Error creating databases: {e}")
@@ -157,11 +177,6 @@ def initWorkspace() -> tuple[str, str, str, str, str, str, str]:
     
 async def makeWorkspace(ctx: discord.ApplicationContext, workspaceList: list[str], thread_id: int) -> None:
     """Used for checking if a command is being run in a valid thread."""
-    embChannelError = discord.Embed(title="Error",
-                                    description="Invalid channel!",
-                                    colour=Color.DEFAULT.value)
-    embChannelError.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
-
     threadId = uint64(thread_id, "big")
 
     try:
@@ -177,7 +192,14 @@ async def makeWorkspace(ctx: discord.ApplicationContext, workspaceList: list[str
                 await ctx.respond(embed=embChannelError)
                 raise WorkspaceError("Invalid channel!")
     except aiosqlite.Error:
+        await ctx.respond(embed=retry_emb)
         raise WorkspaceError("Please try again.")
+    
+    # check blacklist while we are at it
+    if await blacklist_check_db(ctx.author.id, None):
+        blacklist_logger.info(f"{ctx.author.name} ({ctx.author.id}) used a command while blacklisted!")
+        await ctx.respond(embed=blacklist_emb)
+        raise WorkspaceError(BLACKLIST_MESSAGE)
 
 def enumerateFiles(fileList: list[str], randomString: str) -> list[str]:
     """Adds a random string at the end of the filename for save pairs, used to make sure there is no overwriting remotely."""
@@ -324,6 +346,134 @@ async def write_accountid_db(disc_userid: int, account_id: str) -> None:
     except aiosqlite.Error as e:
         logger.error(f"Could not write account ID to database: {e}")
 
+async def blacklist_write_db(disc_user: discord.User | None, account_id: str | None) -> None:
+    """Add entry to the blacklist db."""
+    if disc_user is None and account_id is None:
+        return
+    
+    try:
+        async with aiosqlite.connect(DATABASENAME_BLACKLIST) as db:
+            cursor = await db.cursor()
+
+            if disc_user is not None:
+                userId = uint64(disc_user.id, "big")
+
+                await cursor.execute("INSERT OR IGNORE INTO Disc_Users (user_id, username) VALUES (?, ?)", (userId.as_bytes, disc_user.name,))
+
+            if account_id is not None:
+                accid = int(account_id, 16)
+                if NPSSO is not None:
+                    try:
+                        ps_user = psnawp.user(account_id=str(accid))
+                        username = ps_user.online_id
+                    except PSNAWPNotFound:
+                        username = None
+                accid = uint64(accid, "big")
+                
+                await cursor.execute("INSERT OR IGNORE INTO PS_Users (account_id, username) VALUES (?, ?)", (accid.as_bytes, username,))
+
+            await db.commit()
+    except aiosqlite.Error as e:
+        logger.error(f"Could not write to blacklist database: {e}")
+
+async def blacklist_check_db(disc_userid: int | None, account_id: str | None) -> bool | None:
+    """Check if value is blacklisted, only use argument, leave other to None."""
+    if disc_userid is None and account_id is None:
+        return # nothing provided
+    elif disc_userid is not None and account_id is not None:
+        return # invalid usage
+    
+    try:
+        async with aiosqlite.connect(DATABASENAME_BLACKLIST) as db:
+            cursor = await db.cursor()
+
+            if disc_userid is not None:
+                # userid provided
+                val = uint64(disc_userid, "big")
+                await cursor.execute("SELECT COUNT(*) FROM Disc_Users WHERE user_id = ?", (val.as_bytes,))
+                res = await cursor.fetchone()
+                if res[0] > 0:
+                    return True
+
+            else:
+                # account_id provided
+                val = int(account_id, 16)
+                val = uint64(val, "big")
+                await cursor.execute("SELECT COUNT(*) FROM PS_Users WHERE account_id = ?", (val.as_bytes,))
+                res = await cursor.fetchone()
+                if res[0] > 0:
+                    return True
+    except aiosqlite.Error as e:
+        logger.error(f"Could check blacklist database: {e}")
+
+    return False
+
+async def blacklist_del_db(disc_userid: int | None, account_id: str | None) -> None:
+    """Delete entry in blacklist db."""
+    if disc_userid is None and account_id is None:
+        return
+    
+    try:
+        async with aiosqlite.connect(DATABASENAME_BLACKLIST) as db:
+            cursor = await db.cursor()
+
+            if disc_userid is not None:
+                # userid provided
+                val = uint64(disc_userid, "big")
+                await cursor.execute("DELETE FROM Disc_Users WHERE user_id = ?", (val.as_bytes,))
+
+            else:
+                # account_id provided
+                val = int(account_id, 16)
+                val = uint64(val, "big")
+                await cursor.execute("DELETE FROM PS_Users WHERE account_id = ?", (val.as_bytes,))
+
+            await db.commit()
+    except aiosqlite.Error as e:
+        logger.error(f"Could not remove entry from blacklist database: {e}")
+
+async def blacklist_delall_db() -> None:
+    """Delete all entries in blacklist db."""
+    try:
+        async with aiosqlite.connect(DATABASENAME_BLACKLIST) as db:
+            cursor = await db.cursor()
+
+            await cursor.execute("DELETE FROM Disc_Users")
+            await cursor.execute("DELETE FROM PS_Users")
+
+            await db.commit()
+    except aiosqlite.Error as e:
+        logger.error(f"Could not delete all entries in blacklist database: {e}")
+
+async def blacklist_fetchall_db() -> dict[str, list[dict[str | None, str]] | list[dict[str | None, int]]]:
+    """Obtain all entries inside the blacklist db."""
+    entries = {"PlayStation account IDs": [], "Discord user IDs": []}
+
+    try:
+        async with aiosqlite.connect(DATABASENAME_BLACKLIST) as db:
+            cursor = await db.cursor()
+
+            await cursor.execute("SELECT account_id, username FROM PS_Users")
+            accids = await cursor.fetchall()
+
+            await cursor.execute("SELECT user_id, username FROM Disc_Users")
+            userids = await cursor.fetchall()
+    except aiosqlite.Error as e:
+        logger.error(f"Could not fetch all blacklist database entries: {e}")
+
+    for accid, username in accids:
+        accid = uint64(accid, "big")
+
+        entry = {username: hex(accid.value)}
+        entries["PlayStation account IDs"].append(entry)
+
+    for userid, username in userids:
+        userid = uint64(userid, "big")
+
+        entry = {username: userid.value}
+        entries["Discord user IDs"].append(entry)
+    return entries
+
 def semver_to_num(ver: str | int) -> int:
     if isinstance(ver, int):
         return ver
@@ -344,17 +494,43 @@ async def check_version() -> None:
     cur_ver_num = semver_to_num(VERSION)
     
     if cur_ver_num < latest_ver_num:
-        print("Attention: You are running an outdated version of HTOS. Please update to the latest version to ensure security, performance, and access to new features.")
+        print("Attention: You are running an outdated version of Saviel's HTOS Bot. Please update to the latest version to ensure security, performance, and access to new features.")
         print(f"Your version: {VERSION}")
         print(f"Latest version: {latest_ver}")
         print("\n")
     elif cur_ver_num > latest_ver_num:
-        print("Attention: You are running a version of HTOS that is newer than the latest release. Please report any bugs you may encounter.")
+        print("Attention: You are running a version of Saviel's HTOS Bot that is newer than the latest release. Please report any bugs you may encounter.")
         print(f"Your version: {VERSION}")
         print(f"Latest version: {latest_ver}")
         print("\n")
     else:
-        print("You are running the latest version of HTOS.")
+        print("You are running the latest version of Saviel's HTOS Bot.")
         print(f"Your version: {VERSION}")
         print(f"Latest version: {latest_ver}")
         print("\n")
+
+# async def blacklist_parse(target_section: str, target_value: str) -> bool:
+#     COMMENT_CHAR = "#"
+#     SECTION_START = "["
+#     SECTION_END = "]"
+
+#     async with aiofiles.open(BLACKLIST_CONF_PATH) as conf:
+#         section = ""
+#         async for line in conf:
+#             line = line.rstrip()
+
+#             if not line or line.lstrip().startswith(COMMENT_CHAR):
+#                 continue
+
+#             if line.startswith(SECTION_START) and SECTION_END in line:
+#                 section = line[line.find(SECTION_START) + 1 : line.find(SECTION_END)]
+#                 continue
+
+#             stripped_line = line.strip()
+#             if stripped_line[:2].lower() == "0x":
+#                 stripped_line = stripped_line[2:]
+
+#             if section == target_section:
+#                 if stripped_line.lower() == target_value.lower():
+#                     return True
+#     return False

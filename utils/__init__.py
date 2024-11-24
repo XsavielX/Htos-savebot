@@ -2,6 +2,7 @@ from .constants import (
     VERSION,
     setup_logger,
     logger,
+    blacklist_logger,
     bot,
     activity,
     intents,
@@ -10,7 +11,7 @@ from .constants import (
     PORT_CECIE, 
     MOUNT_LOCATION,
     PS_UPLOADDIR, 
-    STORED_SAVES_FOLDER, 
+    STORED_SAVES_FOLDER,
     UPLOAD_ENCRYPTED, 
     UPLOAD_DECRYPTED,
     DOWNLOAD_ENCRYPTED, 
@@ -21,8 +22,10 @@ from .constants import (
     RANDOMSTRING_LENGTH,
     DATABASENAME_THREADS,
     DATABASENAME_ACCIDS, 
+    DATABASENAME_BLACKLIST,
     TOKEN,
-    NPSSO, 
+    NPSSO,
+    BLACKLIST_MESSAGE,
     GTAV_TITLEID, 
     RDR2_TITLEID, 
     XENO2_TITLEID, 
@@ -42,6 +45,7 @@ from .constants import (
     NMS_TITLEID,
     SMT5_TITLEID,
     TERRARIA_TITLEID,
+    RCUBE_TITLEID,
     FILE_LIMIT_DISCORD, 
     MAX_FILES,
     UPLOAD_TIMEOUT,
@@ -91,7 +95,6 @@ from .constants import (
     embpng1,
     embpng2,
     embnt,
-    embnv1,
     emb8,
     embvalidpsn,
     embinit,
@@ -104,12 +107,15 @@ from .constants import (
     loadSFO_emb,
     finished_emb,
     loadkeyset_emb,
-    working_emb
+    working_emb,
+    retry_emb,
+    blacklist_emb,
+    embChannelError
 )
 from .extras import zipfiles, generate_random_string, pngprocess, obtain_savenames
 from .orbis import checkid, obtainCUSA, check_titleid, resign, reregion_write, obtainID, reregionCheck, checkSaves, OrbisError, handleTitles, SFO_MAGIC, SFO_VERSION, PARAM_NAME, SAVEDIR_RE, TITLE_ID_RE, ACCID_RE, SFOHeader, SFOIndexTable, SFOContextParam, SFOContext, validate_savedirname, parse_pfs_header, PfsSKKey, parse_sealedkey
-from .workspace import startup, cleanup, cleanupSimple, initWorkspace, makeWorkspace, enumerateFiles, listStoredSaves, WorkspaceError, write_threadid_db, fetch_accountid_db, write_accountid_db, fetchall_threadid_db, delall_threadid_db, semver_to_num, check_version, get_savename_from_bin_ext
+from .workspace import startup, cleanup, cleanupSimple, initWorkspace, makeWorkspace, enumerateFiles, listStoredSaves, WorkspaceError, write_threadid_db, fetch_accountid_db, write_accountid_db, fetchall_threadid_db, delall_threadid_db, semver_to_num, check_version, get_savename_from_bin_ext, blacklist_write_db, blacklist_check_db, blacklist_del_db, blacklist_delall_db, blacklist_fetchall_db
 from .exceptions import FileError, PSNIDError
 from .namespaces import Cheats, Converter, Crypto
-from .helpers import DiscordContext, errorHandling, clean_msgs, upload2, upload1, upload2_special, psusername, replaceDecrypted, threadButton, TimeoutHelper, send_final, qr_check, qr_interface_main, run_qr_paginator
+from .helpers import DiscordContext, errorHandling, clean_msgs, upl_check, upl1_check, upload2, upload1, upload2_special, psusername, replaceDecrypted, threadButton, TimeoutHelper, send_final, qr_check, qr_interface_main, run_qr_paginator
 from .type_helpers import uint32, uint64, utf_8, utf_8_s, fmt, INTEGER, CHARACTER, CHARACTER_SPECIAL
