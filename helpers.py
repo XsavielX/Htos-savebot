@@ -644,7 +644,7 @@ async def run_qr_paginator(d_ctx: DiscordContext, stored_saves: dict[str, dict[s
     messages_to_delete = []
 
     while True:
-        # Nur die Namen der Spiele anzeigen (ohne CUSA)
+        
         games = list(stored_saves.keys())
         if not games:
             raise WorkspaceError("NO STORED SAVES!")
@@ -672,7 +672,7 @@ async def run_qr_paginator(d_ctx: DiscordContext, stored_saves: dict[str, dict[s
             except discord.errors.NotFound:
                 pass
 
-        # Versionen mit CUSA anzeigen (CUSA wird optisch zuerst gezeigt, dann die Version)
+        
         versions = []
         previous_cusa = None
         for cusa, titleId_dict in selected_game_data.items():
