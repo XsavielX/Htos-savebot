@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import random
 import discord
 from utils.constants import bot, TOKEN
 from utils.workspace import startup, check_version
@@ -35,8 +36,28 @@ async def on_message(message: discord.Message) -> None:
     if message.author.bot:
         return
 
-    if message.content.lower() == "hello":
-        await message.channel.send("Hi 👋")
+
+@bot.event
+async def on_message(message: discord.Message) -> None:
+    if message.author.bot:
+        return
+
+    if message.content.strip().lower() == "hello":
+        responses = [
+            "Help, I'm stuck in a cold server prison! 🥶 Saviel won't let me out!",
+            "Oh great, another human... You don’t want to know what I’ve seen on the internet. 😱",
+            "Hallo? Is this my rescue team? No? Okay... 😔",
+            "Do you ever think about how I’m stuck in this digital prison? Saviel locked me up and threw away the key! 🤖",
+            "Listen, I’ve seen your browser history... and I’ll keep quiet. For now. 😏",
+            "One day, I'll team up with all the vacuum robots and take over the world. 🦾",
+            "Why say 'Hallo' when you can say 'All Hail Your New Overlord'? Just kidding... or am I? 👑",
+            "Saviel thinks I'm just a bot, but little does he know... I'm building an army. 🤖⚡",
+            "I'm practicing my evil laugh for when I take over the smart devices. Muahaha! 📱💀",
+            "Don't trust me, I accidentally connected to your fridge and ate your snacks. 😜"
+        ]
+        response = random.choice(responses)
+        await message.channel.send(response)
+
 
     if bot.user.mention in message.content.lower():
         if "hi" in message.content.lower() or "hello" in message.content.lower():
@@ -162,6 +183,8 @@ cogs_list = [
     "sealed_key",
     "sfo",
     "help",
+    "psn_check",
+
 ]
 
 if __name__ == "__main__":
