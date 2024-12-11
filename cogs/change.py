@@ -31,7 +31,7 @@ class Change(commands.Cog):
               self, 
               ctx: discord.ApplicationContext, 
               picture: discord.Attachment, 
-              playstation_id: Option(str, description=PS_ID_DESC, default="") # type: ignore
+              playstation_username: Option(str, description=PS_ID_DESC, default="") # type: ignore
             ) -> None:
         
         newUPLOAD_ENCRYPTED, newUPLOAD_DECRYPTED, newDOWNLOAD_ENCRYPTED, newPNG_PATH, newPARAM_PATH, newDOWNLOAD_DECRYPTED, newKEYSTONE_PATH = initWorkspace()
@@ -48,7 +48,7 @@ class Change(commands.Cog):
         msg = ctx
 
         try:
-            user_id = await psusername(ctx, playstation_id)
+            user_id = await psusername(ctx, playstation_username)
             await asyncio.sleep(0.5)
             msg = await ctx.edit(embed=embpng)
             msg = await ctx.fetch_message(msg.id) # use message id instead of interaction token, this is so our command can last more than 15 min
@@ -129,7 +129,7 @@ class Change(commands.Cog):
 
             embPdone = discord.Embed(
                 title="🖼️ PNG Process: Successful",
-                description=f"✨ The save PNG of **{finishedFiles}** was successfully altered and resigned to **{playstation_id or user_id}**.",
+                description=f"✨ The save PNG of **{finishedFiles}** was successfully altered and resigned to **{playstation_username or user_id}**.",
                 colour=Color.DEFAULT.value
             )
             embPdone.set_footer(text=Embed_t.DEFAULT_FOOTER.value)
@@ -154,7 +154,7 @@ class Change(commands.Cog):
     async def title(
               self, 
               ctx: discord.ApplicationContext, 
-              playstation_id: Option(str, description=PS_ID_DESC, default=""), # type: ignore
+              playstation_username: Option(str, description=PS_ID_DESC, default=""), # type: ignore
               maintitle: Option(str, description="For example Grand Theft Auto V.", default=""), # type: ignore
               subtitle: Option(str, description="For example Franklin and Lamar (1.6%).", default="") # type: ignore
             ) -> None:
@@ -175,7 +175,7 @@ class Change(commands.Cog):
         msg = ctx
 
         try: 
-            user_id = await psusername(ctx, playstation_id)
+            user_id = await psusername(ctx, playstation_username)
             await asyncio.sleep(0.5)
             msg = await ctx.edit(embed=embTitleChange)
             msg = await ctx.fetch_message(msg.id) # use message id instead of interaction token, this is so our command can last more than 15 min
@@ -257,7 +257,7 @@ class Change(commands.Cog):
 
             embTdone = discord.Embed(
                 title="🎉 Title altering process: Successful",
-                description=f"✨Altered the save titles of **{finishedFiles}**, and resigned to **{playstation_id or user_id}**.",
+                description=f"✨Altered the save titles of **{finishedFiles}**, and resigned to **{playstation_username or user_id}**.",
                 colour=Color.DEFAULT.value
             )
             embTdone.set_footer(text=Embed_t.DEFAULT_FOOTER.value)

@@ -23,7 +23,7 @@ A discord bot with tons of functionalities that can handle PS4 saves using a jai
 - All commands except ping will only work in private threads created by the bot, thread IDs are stored in .db file
 - Everything will get cleaned up locally and on the PS4
 - All commands that takes save pairs will resign
-- Account ID database, do not include playstation_id parameter if you want to use previously stored account ID
+- Account ID database, do not include playstation_username parameter if you want to use previously stored account ID
 - Interactive user interface
 
 | Second layer encryption game list        | PS4 -> PC conversion and vice versa | Quick cheats             | Extra re-region support (more than keystone & title id swapping) |

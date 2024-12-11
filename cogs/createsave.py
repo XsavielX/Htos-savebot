@@ -42,7 +42,7 @@ class CreateSave(commands.Cog):
               ctx: discord.ApplicationContext, 
               savename: Option(str, description="The name of the save."), # type: ignore
               saveblocks: saveblocks_annotation, # type: ignore
-              playstation_id: Option(str, description=PS_ID_DESC, default="") # type: ignore
+              playstation_username: Option(str, description=PS_ID_DESC, default="") # type: ignore
             ) -> None:
         
         newUPLOAD_ENCRYPTED, newUPLOAD_DECRYPTED, newDOWNLOAD_ENCRYPTED, newPNG_PATH, newPARAM_PATH, newDOWNLOAD_DECRYPTED, newKEYSTONE_PATH = initWorkspace()
@@ -81,7 +81,7 @@ class CreateSave(commands.Cog):
         msg = ctx
 
         try:
-            user_id = await psusername(ctx, playstation_id)
+            user_id = await psusername(ctx, playstation_username)
             await asyncio.sleep(0.5)
 
             # value checks
@@ -220,7 +220,7 @@ class CreateSave(commands.Cog):
         
         embRdone = discord.Embed(
             title="Creation process: Successful",
-            description=f"✅ Save file **{savename}** has been successfully created and resigned to **{playstation_id or user_id}**.",
+            description=f"✅ Save file **{savename}** has been successfully created and resigned to **{playstation_username or user_id}**.",
             colour=Color.DEFAULT.value
         )
         embRdone.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")

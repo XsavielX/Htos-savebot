@@ -25,7 +25,7 @@ class ReRegion(commands.Cog):
         self.bot = bot
     
     @discord.slash_command(description="Change the region of a save (Must be from the same game).")
-    async def reregion(self, ctx: discord.ApplicationContext, playstation_id: Option(str, description=PS_ID_DESC, default="")) -> None:  # type: ignore
+    async def reregion(self, ctx: discord.ApplicationContext, playstation_username: Option(str, description=PS_ID_DESC, default="")) -> None:  # type: ignore
         newUPLOAD_ENCRYPTED, newUPLOAD_DECRYPTED, newDOWNLOAD_ENCRYPTED, newPNG_PATH, newPARAM_PATH, newDOWNLOAD_DECRYPTED, newKEYSTONE_PATH = initWorkspace()
         workspaceFolders = [newUPLOAD_ENCRYPTED, newUPLOAD_DECRYPTED, newDOWNLOAD_ENCRYPTED, 
                             newPNG_PATH, newPARAM_PATH, newDOWNLOAD_DECRYPTED, newKEYSTONE_PATH]
@@ -39,7 +39,7 @@ class ReRegion(commands.Cog):
         msg = ctx
 
         try:
-            user_id = await psusername(ctx, playstation_id)
+            user_id = await psusername(ctx, playstation_username)
             await asyncio.sleep(0.5)
             msg = await ctx.edit(embed=emb21)
             msg = await ctx.fetch_message(msg.id) # use message id instead of interaction token, this is so our command can last more than 15 min
@@ -169,7 +169,7 @@ class ReRegion(commands.Cog):
 
                     emb5 = discord.Embed(
                         title="🌍🔒 Re-regioning & Resigning Process: Successful",
-                        description=f"✅ **{save}** has been successfully resigned to **{playstation_id or user_id}** (**{target_titleid}**).",
+                        description=f"✅ **{save}** has been successfully resigned to **{playstation_username or user_id}** (**{target_titleid}**).",
                         colour=Color.DEFAULT.value
                     )
                     emb5.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
@@ -196,7 +196,7 @@ class ReRegion(commands.Cog):
 
             embRgdone = discord.Embed(
                 title="🌍✅ Re-region Process: Successful",
-                description=f"**{finishedFiles}** has been successfully re-regioned and resigned to **{playstation_id or user_id}** (**{target_titleid}**).",
+                description=f"**{finishedFiles}** has been successfully re-regioned and resigned to **{playstation_username or user_id}** (**{target_titleid}**).",
                 colour=Color.DEFAULT.value
             )
             embRgdone.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
