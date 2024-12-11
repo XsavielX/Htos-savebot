@@ -14,7 +14,7 @@ All save pair commands accept saves in bulk, except for when you upload a save f
 **common parameter**: playstation_username, YOUR PLAYSTATION NETWORK USERNAME  
 It will get converted to your account ID using the psn api. 
 
-If it fails you will get prompted to write in your accound ID, you can find it in the folders by looking into the folders of a savefile from your account. 
+If it fails you will get prompted to write in your account ID, you can find it in the folders by looking into the folders of a savefile from your account. 
 
 Your account ID will be saved and you do not need to include the parameter if you want to use the previously stored one.
 
