@@ -31,7 +31,7 @@ class Encrypt(commands.Cog):
               ctx: discord.ApplicationContext, 
               upload_individually: Option(bool, description="Choose if you want to upload the decrypted files one by one, or the ones you want at once."), # type: ignore
               include_sce_sys: Option(bool, description="Choose if you want to upload the contents of the 'sce_sys' folder."), # type: ignore
-              playstation_id: Option(str, description=PS_ID_DESC, default="") # type: ignore
+              playstation_username: Option(str, description=PS_ID_DESC, default="") # type: ignore
             ) -> None:
         
         newUPLOAD_ENCRYPTED, newUPLOAD_DECRYPTED, newDOWNLOAD_ENCRYPTED, newPNG_PATH, newPARAM_PATH, newDOWNLOAD_DECRYPTED, newKEYSTONE_PATH = initWorkspace()
@@ -47,7 +47,7 @@ class Encrypt(commands.Cog):
         msg = ctx
 
         try:
-            user_id = await psusername(ctx, playstation_id)
+            user_id = await psusername(ctx, playstation_username)
             await asyncio.sleep(0.5)
             msg = await ctx.edit(embed=emb14)
             msg = await ctx.fetch_message(msg.id) # use message id instead of interaction token, this is so our command can last more than 15 min
@@ -134,7 +134,7 @@ class Encrypt(commands.Cog):
 
                     embmidComplete = discord.Embed(
                         title="🔒 Encrypting & Resigning Process: Successful",
-                        description=f"✅ Resigned **{completed}** with Title ID **{title_id}** to **{playstation_id or user_id}**.",
+                        description=f"✅ Resigned **{completed}** with Title ID **{title_id}** to **{playstation_username or user_id}**.",
                         colour=Color.DEFAULT.value
                     )
                     embmidComplete.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
@@ -167,7 +167,7 @@ class Encrypt(commands.Cog):
 
             embComplete = discord.Embed(
                 title="🔒 Encrypting & Resigning Process: Successful",
-                description=f"✅ Resigned **{full_completed}** to **{playstation_id or user_id}**.",
+                description=f"✅ Resigned **{full_completed}** to **{playstation_username or user_id}**.",
                 colour=Color.DEFAULT.value
             )
             embComplete.set_footer(icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
