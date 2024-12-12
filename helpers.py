@@ -3,6 +3,7 @@ import asyncio
 import os
 import json
 import aiohttp
+import discord.bot
 import data.crypto.helpers as crypthelp
 import utils.orbis as orbis
 import aiofiles.os
@@ -59,7 +60,12 @@ class threadButton(discord.ui.View):
         await interaction.response.send_message("Creating thread...", ephemeral=True)
 
         ids_to_remove = []
-        
+        global bot_name
+        bot_name = discord.appinfo.__name__
+        global bot_owner_name
+        app_info = await bot.application_info()
+        bot_owner_name = f"**{app_info.owner.name}**"
+
         try:
             thread = await interaction.channel.create_thread(name=interaction.user.name, auto_archive_duration=10080)
             await thread.send(interaction.user.mention)
@@ -77,7 +83,21 @@ class threadButton(discord.ui.View):
             )
             threadwelcome.set_thumbnail(url="https://cdn.discordapp.com/attachments/1256434247120584737/1297344797086060574/standard.gif?ex=671595ff&is=6714447f&hm=98be2d6eb93d0c40b68e072b0f8da8b4bfe3d6c3c3991fde38f9960f5c45f44b&")
             threadwelcome.set_footer(text="Start Modding & Have fun!", icon_url="https://cdn.discordapp.com/emojis/1253123128943579147.gif?size=48")
+            botagreement = discord.Embed(
+                title="User Agreement for {bot_name}",
+                description= (
+                    f"By using {bot_name} (hereafter referred to as 'The bot'), you agree to the following terms:\n"
+                    f"Non-Monetary Use: The bot may not be used for any activity that generates monetary gain, directly or indirectly, without explicit written permission from [Your Name/Entity]. This includes, but is not limited to, charging fees for access to The bot, utilizing The bot in paid services, or selling features or results derived from its use.\n\n"
+                    f"Permission Requirement: Explicit permission must be obtained in writing from {bot_name} to use The bot for any form of monetary gain. Unauthorized monetization will be considered a violation of this agreement.\n\n"
+                    "Consequences of Violation: Any breach of this agreement may result in:\n\n"
+                    "Immediate revocation of access to The bot.\n"
+                    "Potential legal action to address the violation.\n\n"
+                    "Acceptance of Terms: By using The bot, you acknowledge and agree to these terms. If you do not agree, discontinue use of The bot immediately.\n\n"
+                ),
+                colour=0x0083ff
+            )
             await thread.send(embed=threadwelcome)
+            await thread.send(embed=botagreement)
             ids_to_remove = await write_threadid_db(interaction.user.id, thread.id)
         except (WorkspaceError, discord.Forbidden) as e:
             logger.error(f"Can not create thread: {e}")
