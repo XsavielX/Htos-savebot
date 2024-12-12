@@ -162,7 +162,6 @@ To get started with our free service for editing PS4 save games (including saves
 {bot_owner_name or "👑 **Bot Owner:** **Unknown Owner**"}  
 {message.author.mention}"""
         )
-
     await bot.process_commands(message)
 
 async def main():
